@@ -1,3 +1,21 @@
+'''
+Usage:
+    <path to spark-submit> <path to this script>
+    e.g. spark-2.2.1-bin-hadoop2.7/bin/spark-submit image_downloader_spark.py
+
+    This script is considered to reside under PROJECT_DIR (outer most level)
+   
+Input:
+    Input data is default to reside in PROJECT_DIR/data/
+
+Ouput:
+    Output downloaded images are default to reside in PROJECT_DIR/data/download/<timestamp>/
+
+Note:
+    The output of this scripts are downloaded images with native names. Apply rename.sh in PROJECT_DIR to rename with integer index.
+'''
+
+
 import urllib.request
 import threading
 from imgurdownloader import ImgurDownloader, ImgurException
