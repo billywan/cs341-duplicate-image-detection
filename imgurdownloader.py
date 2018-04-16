@@ -24,7 +24,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import unicodedata
-import click
 
 
 __doc__ = """
@@ -177,7 +176,7 @@ class ImgurDownloader:
         return parsed_url._replace(path=new_path).geturl()
 
     def _init_image_ids_with_json(self, html):
-        """get html section that contains image ID(s) and file extensions of 
+        """get html section that contains image ID(s) and file extensions of
         each ID with json."""
         """Format of the search variable.
         item: <java dict>\n};
@@ -208,7 +207,7 @@ class ImgurDownloader:
         yield image_ids
 
     def _init_image_ids_with_regex(self, html):
-        """get section from html that contains image ID(s) and file extensions 
+        """get section from html that contains image ID(s) and file extensions
         of each ID.
         """
         image_ids = None
@@ -244,7 +243,7 @@ class ImgurDownloader:
 
     def get_album_key(self):
         """
-        Returns the key of this album. Helpful if you plan on generating your 
+        Returns the key of this album. Helpful if you plan on generating your
         own folder names.
         """
         return self.main_key
@@ -252,7 +251,7 @@ class ImgurDownloader:
     def on_image_download(self, callback):
         """
         Allows you to bind a function that will be called just before an image
-        is about to be downloaded. You'll be given the 1-indexed position of 
+        is about to be downloaded. You'll be given the 1-indexed position of
         the image, it's URL and it's destination file in the callback like so:
             my_awesome_callback(1, "http://i.imgur.com/fGWX0.jpg", "~/Downloads/1-fGWX0.jpg")
         """
@@ -279,10 +278,12 @@ class ImgurDownloader:
 
         """
         # Try and create the album folder:
-        album_folder = '' if not folder_name else folder_name
-        if len(self.imageIDs) > 1:
-            album_folder = self.album_title
+        # album_folder = '' if not folder_name else folder_name
+        # if len(self.imageIDs) > 1:
+        #     album_folder = self.album_title
 
+        # billy: do not create album folder
+        album_folder = ''
         dir_save = os.path.join(self.dir_download, album_folder)
         downloaded = skipped = 0
 
@@ -295,17 +296,21 @@ class ImgurDownloader:
             key = image[0]
             ext = image[1]
             # should be safe to save & open as .mp4
-            if ext.endswith(('.gifv', 'gif')):
-                ext = '.mp4'
-                # image_url, ext = get_gifv_info(image_url, key, ext)
-                # print('img_url: %s \next: %s' % (image_url, ext))
+            # if ext.endswith(('.gifv', 'gif')):
+            #     ext = '.mp4'
+
+            # billy: do not download gif or gifv
+            if ext.endswith(('gifv', 'gif')):
+                continue
 
             image_url = "http://i.imgur.com/" + key + ext
 
-            prefix = "%0*d-" % (
-                int(math.ceil(math.log(len(self.imageIDs) + 1, 10))),
-                counter
-            )
+            # billy: do not include prefix
+            # prefix = "%0*d-" % (
+            #     int(math.ceil(math.log(len(self.imageIDs) + 1, 10))),
+            #     counter
+            # )
+            prefix = ''
 
             filename = prefix + key + ext
             if len(self.imageIDs) == 1:
@@ -410,12 +415,6 @@ def slugify(value):
     return value
 
 
-@click.command()
-@click.option(
-    '--print-only', default=False, is_flag=True,
-    help="Print download link only, no download.")
-@click.argument('url', nargs=1, required=False)
-@click.argument('destination_folder', nargs=1, required=False)
 def main(url, destination_folder, print_only=False):
     """Quickly and easily download images from Imgur."""
     if not url:
