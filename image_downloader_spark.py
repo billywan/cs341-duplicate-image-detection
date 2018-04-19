@@ -9,7 +9,7 @@ Input:
     Input data is default to reside in PROJECT_DIR/data/
 
 Ouput:
-    Output downloaded images are default to reside in PROJECT_DIR/data/<timestamp>/
+    Output downloaded images are default to reside in /mnt/data/<timestamp>/
 
 Note:
     Requires Python 3.
@@ -132,7 +132,7 @@ quiet_logs(sc)
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(PROJECT_DIR, "data")
-DOWNLOAD_DIR = os.path.join(DATA_DIR, str(datetime.datetime.now()))
+DOWNLOAD_DIR = os.path.join("/mnt/data", str(datetime.datetime.now()))
 COL_NAMES = ['timestamp', 'user_id', 'subreddit_name', 'post_fullname', 'post_type', 'post_title', 'post_target_url', 'post_body']
 # for now don't download .gif and .gifv (mp4) files
 IMAGE_FORMATS = ['png', 'jpg', 'jpeg']
