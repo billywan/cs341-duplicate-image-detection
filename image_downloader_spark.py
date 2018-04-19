@@ -79,6 +79,8 @@ def download_one(link_tuple):
             file_path = os.path.join(DOWNLOAD_DIR, link.split('/')[-1])
             urllib.request.urlretrieve(link, file_path)
             return True;
+        except ConnectionResetError:
+            print("Failed to download image at {} due to connection reset".format(link))
         except urllib.error.URLError as e:
             print("Failed to download image at: {}".format(link), e.reason)
     return False;
