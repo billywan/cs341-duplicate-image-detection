@@ -1,2 +1,6 @@
 pandas
 numpy
+scipy
+Cython
+Pillow
+scikit-learn
