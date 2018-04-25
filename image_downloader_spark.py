@@ -83,6 +83,8 @@ def download_one(link_tuple):
             print("Failed to download image at {} due to connection reset".format(link))
         except urllib.error.URLError as e:
             print("Failed to download image at: {}".format(link), e.reason)
+        except:
+            print("Failed to download image at: {} for unknown reasons".format(link))
     return False;
 
 def make_dir(dir_name):
