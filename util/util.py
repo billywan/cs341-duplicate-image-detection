@@ -1,37 +1,55 @@
 import os
 import math
 import numpy as np
+import keras
+from keras.preprocessing import image
+from keras.applications.vgg16 import preprocess_input
 from PIL import Image
 
 SCORE = 1
-src_in_path = "/Users/zhangyun/Documents/Stanford/2018Spring/CS341/cs341-duplicate-image-detection/Dataset/CASIA_DATASET/CASIA2/Au_out"
-tar_in_path = "/Users/zhangyun/Documents/Stanford/2018Spring/CS341/cs341-duplicate-image-detection/Dataset/CASIA_DATASET/CASIA2/Sp_out"
+src_in_path = "/Users/EricX/Desktop/CS341/cs341-duplicate-image-detection/Preprocessed_CASIA_Dataset/CASIA_DATASET/CASIA2/Au_out"
+tar_in_path = "/Users/EricX/Desktop/CS341/cs341-duplicate-image-detection/Preprocessed_CASIA_Dataset/CASIA_DATASET/CASIA2/Sp_out"
+
+
+def get_image(path):
+    img = image.load_img(path, target_size=model.input_shape[1:3])
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
+    return img, x
+
 
 # Load source images and target images as lists of numpy arrays
-def load_data():
-	# Housekeeping
-	if not os.path.exists(src_in_path) or not os.path.exists(tar_in_path):
-		raise Exception("Input path does not exist")
-	X_src, X_tar = [],[]
-	for file_name in os.listdir(src_in_path):
-		image = Image.open(os.path.join(src_in_path, file_name))
-		X_src.append(np.array(image))
-	for file_name in os.listdir(tar_in_path):
-		image = Image.open(os.path.join(tar_in_path, file_name))
-		X_tar.append(np.array(image))
-	assert len(X_src) == len(X_tar)
-	print "Loading data completed"
-	return X_src, X_tar
+def load_data(img_size=[224, 224]):
+    # Housekeeping
+    print(os.path.exists(src_in_path), os.path.exists(tar_in_path))
+    if not os.path.exists(src_in_path) or not os.path.exists(tar_in_path):
+        raise Exception("Input path does not exist")
+        
+    X_src, X_tar = [],[]
+    for file_name in os.listdir(src_in_path):
+        img = image.load_img(os.path.join(src_in_path, file_name), target_size=img_size)
+        img = image.img_to_array(img)
+        X_src.append(img)
+    for file_name in os.listdir(tar_in_path):
+        img = image.load_img(os.path.join(tar_in_path, file_name), target_size=img_size)
+        img = image.img_to_array(img)
+        X_tar.append(img)
+    assert len(X_src) == len(X_tar)
+    #X_src, X_tar = preprocess_input(np.stack(X_src, 0)), preprocess_input(np.stack(X_tar, 0))
+    print "Loading data completed"
+    return X_src[:1000], X_tar[:1000]
 
 # Generate a list of tuple (X_src, X_tar, y) batches
 # Return value is in the form of list of lists, with each inner list as a batch
-def batch_generator(batch_size=100):
-	batches = []
-	X_src, X_tar = load_data()
-	num_batches = int(math.ceil(float(len(X_src))/batch_size))
-	for i in range(num_batches):
-		batch = []
-		for j in range(i*batch_size, min((i+1)*batch_size, len(X_src))):
-			batch.append((X_src[j], X_tar[j], SCORE))
-		batches.append(batch)
-	return batches
+def batch_generator(img_size=[224, 224], batch_size=50):
+    batches = []
+    X_src, X_tar = load_data(img_size)
+    num_batches = int(math.ceil(float(len(X_src))/batch_size))
+    for i in range(num_batches):
+        X_src_batch = X_src[i*batch_size:i*batch_size+batch_size]
+        X_tar_batch = X_tar[i*batch_size:i*batch_size+batch_size]
+        score_batch = [SCORE]*batch_size
+        batch = (preprocess_input(np.stack(X_src_batch, 0)), preprocess_input(np.stack(X_tar_batch, 0)), np.array(score_batch))
+        batches.append(batch)
+    return batches
