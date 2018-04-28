@@ -84,8 +84,11 @@ def writeOutput():
 
 	data_dict = {'X1' : X1, 'X2' : X2, 'y' : y}
 	file_path = os.path.join(OUTPUT_DIR, "data_batch_"+str(batch_counter))
-	pickle.dump(data_dict, open(file_path, "wb"))
+	out = open(file_path, "wb")
+	pickle.dump(data_dict, out)
 	print("Writing output to: {}".format(file_path))
+	out.close()
+
 
 def cleanUp():
 	global batch_counter, _X1, _X2, _y
