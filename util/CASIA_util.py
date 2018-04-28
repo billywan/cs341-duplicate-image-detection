@@ -1,3 +1,21 @@
+'''
+This script load processed CASIA dataset to batches
+
+Usage:
+    This script is considered to reside under PROJECT_DIR/util (PROJECT_DIR is the outer most level)
+
+Input: 
+	1. Processed authentic images under directory src_in_path
+
+	2. Processed spliced images under directory tar_in_path
+
+Output:
+	List of tuples(X_src, X_tar, score) with length batch_size
+
+	X_src and X_tar are 3d numpy arrays with dimension (length, width, 3)
+	
+	score is an integer
+'''
 import os
 import math
 import numpy as np

@@ -1,3 +1,22 @@
+'''
+This script resize and process CASIA dataset
+
+Usage:
+    This script is considered to reside under PROJECT_DIR/util (PROJECT_DIR is the outer most level)
+
+Input: 
+	1. Orignal authentic images under directory au_in_path
+
+	2. Original spliced images under directory sp_in_path
+
+Output:
+	1. Processed authentic images under directory au_out_path
+
+	2. Processed spliced images under directory sp_out_path
+
+Note:
+	au_int_path is an intermediate directory for storing partially processed images
+'''
 from PIL import Image
 import os
 import shutil
