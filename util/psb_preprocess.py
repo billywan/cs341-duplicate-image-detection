@@ -52,6 +52,16 @@ def make_dir(dir_name):
     os.makedirs(dir_name)
 
 # Open and resize images and save as np array
+def resizeOne(file_path):
+	try:
+		img = Image.open(file_path)
+		processed_img = np.array(img.resize(IMG_SIZE, Image.ANTIALIAS))
+		return True, processed_img
+	except:
+		print("Unable to open image at {} for unknwon reason".format(file_path))
+		return False, None
+
+# Resize images in a directory
 def resizeImg(dirName, fileList):
 	submission_fn = fileList[0]
 	comments_fn = fileList[1:]
@@ -62,7 +72,7 @@ def resizeImg(dirName, fileList):
 		comment_imgs = [np.array(Image.open(os.path.join(dirName, comment_fn)).resize(IMG_SIZE, Image.ANTIALIAS)) for comment_fn in comments_fn]
 		return True, submission_img, comment_imgs
 	except:
-		print("Unable to open image in {} for unknwon reason".format(dirName))
+		print("Unable to open image in {} for unknown reason".format(dirName))
 		return False, None, None
 
 # Pack data as dictionary
@@ -108,13 +118,10 @@ for dirName, subDirList, fileList in os.walk(DATA_DIR):
 	if not succeeded:
 		continue
 	# Filter out images without 3 dimensions
-	if np.ndim(submission_img) != 3:
-		continue
-	if submission_img.shape[2] != 3:
+	if np.ndim(submission_img) != 3 or submission_img.shape[2] != 3:
 		continue
 
-	comment_imgs = list(filter(lambda x: np.ndim(x) == 3, comment_imgs))
-	comment_imgs = list(filter(lambda x: x.shape[2] == 3, comment_imgs))
+	comment_imgs = list(filter(lambda x: np.ndim(x) == 3 and x.shape[2] == 3, comment_imgs))
 	
 	num_comments = len(comment_imgs)
 
@@ -147,6 +154,19 @@ for dirName, subDirList, fileList in os.walk(DATA_DIR):
 			_X2.append(comment_imgs[i2])
 			_y.append(SCORE_INT)
 			result_counter += 1
+	# Generate (s, _, 0) pair
+	for i in range(num_comments):
+		while True:
+		# Randomly sample a image from photoshopbattle_images
+			rand_dir = os.path.join(DATA_DIR, random.choice(os.listdir(DATA_DIR)))
+			rand_file_path = os.path.join(rand_dir, os.listdir(rand_dir)[0])
+			succeeded, rand_img = resizeOne(rand_file_path)
+			if succeeded and np.ndim(rand_img)==3 and rand_img.shape[2]==3:
+				_X1.append(submission_img)
+				_X2.append(rand_img)
+				_y.append(SCORE_NEG)
+				result_counter += 1
+				break
 
 # Write to output the rest of results
 writeOutput()
