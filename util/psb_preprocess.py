@@ -33,7 +33,7 @@ DATA_DIR = os.path.join(DISK_DIR, "photoshopbattle_images")
 OUTPUT_DIR = os.path.join(DISK_DIR, "data_batches")
 
 BATCH_SIZE = 5000
-IMG_SIZE = 256, 256
+IMG_SIZE = 224, 224
 SCORE_POS = 1
 SCORE_INT = 0.5
 SCORE_NEG = 0
