@@ -149,7 +149,10 @@ def main():
     siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
     batch_generator = psb_util.batch_generator_binary(data_dir="/Users/EricX/Desktop/CS341/data_batches2")
     loss_history = siamese_model.fit_generator(batch_generator,
-                               #validation_data=([valid_a, valid_b], valid_sim),
+
+
+batch_generator = psb_util.batch_generator(data_dir="/mnt/data/toy")
+loss_history = siamese_model.fit_generator(batch_generator,
                                 steps_per_epoch=20,
                                 epochs = 15,
                                 verbose = True)

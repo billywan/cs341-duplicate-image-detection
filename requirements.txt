@@ -4,3 +4,7 @@ scipy
 Cython
 Pillow
 scikit-learn
+tensorflow-gpu
+keras
+matplotlib
+tqdm

@@ -97,4 +97,5 @@ def test():
     for [a, b], c in batch_generator_binary():
         print a.shape, b.shape, c.shape
 
+
 #test()
