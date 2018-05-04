@@ -21,8 +21,11 @@ Ouput:
 import pickle
 import os
 import sys
+import keras
+from keras.preprocessing import image
+from keras.applications.vgg16 import preprocess_input
 
-DATA_DIR = "/mnt/data/data_batches"
+DATA_DIR = "/Users/EricX/Desktop/CS341/data_batches"
 
 def load_data():
   data_list = []
@@ -33,6 +36,11 @@ def load_data():
         print('%s: ' % k, v.shape)
         data_list.append(data_dict)
   return data_list
+
+
+
+def batch_generator():
+  
 
 if not os.path.exists(DATA_DIR):
   sys.exit("Directory data_batches does not exists. Ending...")
