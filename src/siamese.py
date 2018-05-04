@@ -153,8 +153,8 @@ def main():
     siamese_model = build_model()
     parallel_siamese = multi_gpu_model(siamese_model, gpus=4)
     parallel_siamese.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
-    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size)
-    test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
+    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches")
+    test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test")
     steps_per_epoch = 28*5000/FLAGS.batch_size
     validation_steps = 4*5000/FLAGS.batch_size
     loss_history = parallel_siamese.fit_generator(train_batch_generator, 
