@@ -5,8 +5,8 @@ import pickle
 import numpy as np
 import matplotlib.pyplot
 from matplotlib.pyplot import imshow
-from sklearn.decomposition import PCA
-from scipy.spatial import distance
+#from sklearn.decomposition import PCA
+#from scipy.spatial import distance
 from tqdm import tqdm
 from functools import partial
 #adding parent/util directory to the system path, so that any file in the util package can be imported
@@ -15,6 +15,7 @@ import psb_util_test as psb_util
 
 
 #keras related imports
+import tensorflow as tf
 import keras
 from keras.preprocessing import image
 # from keras.applications.imagenet_utils import decode_predictions, preprocess_input
@@ -106,7 +107,7 @@ def build_model():
     siamese_model.summary()
     return siamese_model
 
-siamese_model=build_model()
+
 
 # src_feat = feature_model(src_in)
 # tar_feat = feature_model(tar_in)
@@ -137,20 +138,27 @@ siamese_model=build_model()
 #     layer.trainable=False
 # # setup the optimization process
 # #A trick for bounded output range is to scale the target values between (0,1) and use sigmoid output + binary cross-entropy loss.
-siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
 
 
-batch_generator = psb_util.batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches2")
-loss_history = siamese_model.fit_generator(batch_generator,
+tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
+FLAGS = tf.app.flags.FLAGS
+
+
+def main():
+    siamese_model=build_model()
+    siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+    batch_generator = psb_util.batch_generator_binary(data_dir="/Users/EricX/Desktop/CS341/data_batches2")
+    loss_history = siamese_model.fit_generator(batch_generator,
                                #validation_data=([valid_a, valid_b], valid_sim),
                                 steps_per_epoch=20,
                                 epochs = 15,
                                 verbose = True)
 
 
-
-
-
+if __name__ == "__main__":
+    print "num_epochs is {}".format(FLAGS.num_epochs)
+    print type(FLAGS.num_epochs)
+    #main()
 
 
 

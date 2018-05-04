@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-
+# ipython notebook extentions
+*.ipynb
 Preprocessed_CASIA_Dataset
 Preprocessed_CASIA_Dataset.zip
 
