@@ -48,7 +48,7 @@ def batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches", batch_si
     while True:
         for fn in os.listdir(data_dir):
             if fn.startswith('data_batch_'):
-                print('loading file {}'.format(fn))
+                print('\nLoading file {} ...\n'.format(fn))
                 with open(os.path.join(data_dir, fn), 'rb') as handle:
                     data_dict = pickle.load(handle)
                     X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
@@ -57,7 +57,7 @@ def batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches", batch_si
                     print(X0.shape, X1.shape, y.shape)
                     print('Preprocessing input...')
                     X0, X1 = preprocess_input(X0), preprocess_input(X1)
-                    print('Done preprocessing')
+                    print('Done preprocessing.')
                     for i in range(0, X0.shape[0], batch_size):
                         X0_batch = X0[i:i+batch_size]
                         X1_batch = X1[i:i+batch_size]
@@ -75,7 +75,7 @@ def batch_generator_binary(data_dir="/Users/EricX/Desktop/CS341/data_batches", b
     while True:
         for fn in os.listdir(data_dir):
             if fn.startswith('data_batch_'):
-                print('loading file {} ...'.format(fn))
+                print('\nLoading file {} ...\n'.format(fn))
                 with open(os.path.join(data_dir, fn), 'rb') as handle:
                     data_dict = pickle.load(handle)
                     X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
