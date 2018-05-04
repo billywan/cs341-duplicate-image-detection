@@ -1,4 +1,4 @@
-from __future__ import print_function
+#from __future__ import print_function
 
 #miscellaneous imports
 import os, sys
@@ -31,7 +31,6 @@ from keras.utils import multi_gpu_model
 
 IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
-VGG_MODEL.summary()
 #VGG_MODEL.summary()
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
@@ -102,11 +101,8 @@ def build_model(FLAGS={}):
                         for (src_feat, tar_feat) in feat_pairs_by_layer]
     predictions_by_layer = [get_prediction(src_feat, tar_feat, str(i)) for i, (src_feat, tar_feat) in enumerate(feat_pairs_dense)]
     assert len(predictions_by_layer) == len(FEAT_LAYERS)
-    print type(predictions_by_layer[0])
-    print type(predictions_by_layer[0]*0.5)
 
     final_score = aggregate_predictions(predictions_by_layer)
-    print type(final_score)
 
     siamese_model = Model(inputs=[src_in, tar_in], outputs = [final_score], name = 'Similarity_Model')
     siamese_model.summary()
