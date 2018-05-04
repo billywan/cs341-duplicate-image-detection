@@ -52,7 +52,7 @@ def batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches", batch_si
                     data_dict = pickle.load(handle)
                     X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
                     X0, X1, y = X0.astype(np.float64), X1.astype(np.float64), y.astype(np.float64)
-                    X0, X1, y = unison_shuffled_data(X0, X1, y)
+                    #X0, X1, y = unison_shuffled_data(X0, X1, y)
                     print X0.shape, X1.shape, y.shape
                     print 'preprocessing input...'
                     X0, X1 = preprocess_input(X0), preprocess_input(X1)
@@ -79,7 +79,7 @@ def batch_generator_binary(data_dir="/Users/EricX/Desktop/CS341/data_batches", b
                     X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
                     X0, X1, y = X0.astype(np.float64), X1.astype(np.float64), y.astype(np.float64)
                     X0, X1, y = make_binary(X0, X1, y)
-                    X0, X1, y = unison_shuffled_data(X0, X1, y)
+                    #X0, X1, y = unison_shuffled_data(X0, X1, y)
                     print X0.shape, X1.shape, y.shape
                     print 'preprocessing input...'
                     assert len(y[y==0.5]) == 0

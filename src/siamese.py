@@ -23,7 +23,7 @@ from keras.applications.vgg16 import preprocess_input
 from keras.models import Model
 from keras.models import Model
 from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda
-
+from keras.utils import multi_gpu_model
 
 
 
@@ -57,7 +57,7 @@ def flatten_dense(feat_tensor, out_dim=1024, activation='relu', batch_norm=True)
     feat_tensor = dense_with_bn(feat_tensor, out_dim, activation, batch_norm)
     return feat_tensor
 
-def dense_with_bn(feat_tensor, out_dim=1024, activation='relu', batch_norm=True, dropout=True):
+def dense_with_bn(feat_tensor, out_dim=1024, activation='relu', batch_norm=True, dropout=False):
     feat_tensor = Dense(out_dim, activation = 'linear')(feat_tensor)
     #use bn before activation
     if batch_norm: 
@@ -143,17 +143,27 @@ def build_model(FLAGS={}):
 # #A trick for bounded output range is to scale the target values between (0,1) and use sigmoid output + binary cross-entropy loss.
 
 
-tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
+tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
+tf.app.flags.DEFINE_integer("batch_size", 400, "batch_size")
+
 FLAGS = tf.app.flags.FLAGS
 
 
+
+
 def main():
-    siamese_model=build_model()
-    siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
-    batch_generator = psb_util.batch_generator(data_dir="/mnt/data/toy")
-    loss_history = siamese_model.fit_generator(batch_generator, 
-                                                steps_per_epoch=20,
-                                                epochs = 15,
+    siamese_model = build_model()
+    parallel_siamese = multi_gpu_model(siamese_model, gpus=4)
+    parallel_siamese.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches")
+    test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test")
+    steps_per_epoch = 28*5000/FLAGS.batch_size
+    validation_steps = 4*5000/FLAGS.batch_size
+    loss_history = parallel_siamese.fit_generator(train_batch_generator, 
+                                                validation_data = test_batch_generator,
+                                                steps_per_epoch = steps_per_epoch,
+                                                validation_steps = validation_steps,
+                                                epochs = FLAGS.num_epochs,
                                                 verbose = True)
 
 
@@ -163,7 +173,7 @@ def main():
 if __name__ == "__main__":
     print "num_epochs is {}".format(FLAGS.num_epochs)
     print type(FLAGS.num_epochs)
-    #main()
+    main()
 
 
 
