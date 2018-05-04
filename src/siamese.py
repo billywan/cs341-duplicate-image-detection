@@ -63,7 +63,8 @@ def dense_with_bn(feat_tensor, out_dim=1024, activation='relu', batch_norm=True,
     if batch_norm: 
         feat_tensor = BatchNormalization()(feat_tensor)
     feat_tensor = Activation(activation)(feat_tensor)
-    feat_tensor = Dropout(drop_rate)(feat_tensor)
+    if dropout:
+        feat_tensor = Dropout(drop_rate)(feat_tensor)
     return feat_tensor
 
 def get_prediction(src_feat, tar_feat, name, dense_dims=PREDICTION_DENSE_DIMS):
