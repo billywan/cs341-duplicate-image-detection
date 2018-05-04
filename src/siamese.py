@@ -29,12 +29,13 @@ from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activatio
 
 IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
+VGG_MODEL.summary()
 #VGG_MODEL.summary()
-FEAT_LAYERS = ['block3_pool', 'block5_pool']
+FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
 #infer how many dense layers used for prediction
 PREDICTION_DENSE_DIMS = [1024, 1024]
-
+drop_rate = 0.15
 
 
 
@@ -56,12 +57,13 @@ def flatten_dense(feat_tensor, out_dim=1024, activation='relu', batch_norm=True)
     feat_tensor = dense_with_bn(feat_tensor, out_dim, activation, batch_norm)
     return feat_tensor
 
-def dense_with_bn(feat_tensor, out_dim=1024, activation='relu', batch_norm=True):
+def dense_with_bn(feat_tensor, out_dim=1024, activation='relu', batch_norm=True, dropout=True):
     feat_tensor = Dense(out_dim, activation = 'linear')(feat_tensor)
     #use bn before activation
     if batch_norm: 
         feat_tensor = BatchNormalization()(feat_tensor)
     feat_tensor = Activation(activation)(feat_tensor)
+    feat_tensor = Dropout(drop_rate)(feat_tensor)
     return feat_tensor
 
 def get_prediction(src_feat, tar_feat, name, dense_dims=PREDICTION_DENSE_DIMS):
@@ -84,7 +86,7 @@ def aggregate_predictions(predictions):
     return score
 
 
-def build_model():
+def build_model(FLAGS={}):
     src_in = Input(shape = IMG_SHAPE, name = 'src_input')
     tar_in = Input(shape = IMG_SHAPE, name = 'tar_input')
     feature_model = get_feature_model() 
@@ -160,7 +162,7 @@ def main():
 if __name__ == "__main__":
     print "num_epochs is {}".format(FLAGS.num_epochs)
     print type(FLAGS.num_epochs)
-    main()
+    #main()
 
 
 
