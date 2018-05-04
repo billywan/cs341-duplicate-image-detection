@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 #miscellaneous imports
 import os, sys
 import random
@@ -171,8 +173,9 @@ def main():
 
 
 if __name__ == "__main__":
-    print "num_epochs is {}".format(FLAGS.num_epochs)
-    print type(FLAGS.num_epochs)
+    print("num_epochs is {}".format(FLAGS.num_epochs))
+    print("batch_size is {}".format(FLAGS.batch_size))
+
     main()
 
 
