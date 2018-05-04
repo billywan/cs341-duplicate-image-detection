@@ -147,21 +147,20 @@ FLAGS = tf.app.flags.FLAGS
 def main():
     siamese_model=build_model()
     siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
-    batch_generator = psb_util.batch_generator_binary(data_dir="/Users/EricX/Desktop/CS341/data_batches2")
-    loss_history = siamese_model.fit_generator(batch_generator,
+    batch_generator = psb_util.batch_generator(data_dir="/mnt/data/toy")
+    loss_history = siamese_model.fit_generator(batch_generator, 
+                                                steps_per_epoch=20,
+                                                epochs = 15,
+                                                verbose = True)
 
 
-batch_generator = psb_util.batch_generator(data_dir="/mnt/data/toy")
-loss_history = siamese_model.fit_generator(batch_generator,
-                                steps_per_epoch=20,
-                                epochs = 15,
-                                verbose = True)
+
 
 
 if __name__ == "__main__":
     print "num_epochs is {}".format(FLAGS.num_epochs)
     print type(FLAGS.num_epochs)
-    #main()
+    main()
 
 
 
