@@ -143,6 +143,9 @@ def build_model(FLAGS={}):
 
 tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
 tf.app.flags.DEFINE_integer("batch_size", 400, "batch_size")
+tf.app.flags.DEFINE_integer("steps_per_epoch", 200, "batch_size")
+tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
+
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -155,12 +158,12 @@ def main():
     parallel_siamese.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
     train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size)
     test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
-    steps_per_epoch = 28*5000/FLAGS.batch_size
-    validation_steps = 4*5000/FLAGS.batch_size
+    #steps_per_epoch = 28*5000/FLAGS.batch_size
+    #validation_steps = 4*5000/FLAGS.batch_size
     loss_history = parallel_siamese.fit_generator(train_batch_generator, 
                                                 validation_data = test_batch_generator,
-                                                steps_per_epoch = steps_per_epoch,
-                                                validation_steps = validation_steps,
+                                                steps_per_epoch = FLAGS.steps_per_epoch,
+                                                validation_steps = FLAGS.validation_steps,
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True)
 
