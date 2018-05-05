@@ -205,6 +205,8 @@ def main():
 if __name__ == "__main__":
     print("num_epochs is {}".format(FLAGS.num_epochs))
     print("batch_size is {}".format(FLAGS.batch_size))
+    print("steps_per_epoch is {}".format(FLAGS.steps_per_epoch))
+    print("validation_steps is {}".format(FLAGS.validation_steps))
 
     main()
 
