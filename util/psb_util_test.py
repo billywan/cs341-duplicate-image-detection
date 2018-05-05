@@ -50,8 +50,8 @@ def batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches", batch_si
     while True:
         random.shuffle(data_files)
         for file in data_files:
-            print('Loading file {}'.format(fn))
-            with open(os.path.join(data_dir, fn), 'rb') as handle:
+            print('\nLoading file {}\n'.format(file))
+            with open(os.path.join(data_dir, file), 'rb') as handle:
                 data_dict = pickle.load(handle)
                 X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
                 X0, X1, y = X0.astype(np.float32), X1.astype(np.float32), y.astype(np.float32)
