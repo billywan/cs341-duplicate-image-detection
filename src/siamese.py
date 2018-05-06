@@ -153,9 +153,9 @@ def build_model(FLAGS):
 tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
 tf.app.flags.DEFINE_integer("batch_size", 200, "batch_size")
 tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
-tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
+#tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
 tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
-tf.app.flags.DEFINE_float("reg_rate", 0.01, "Rate of regularization for each dense layers")
+tf.app.flags.DEFINE_float("reg_rate", 0.01, "Rate of regularization for each dense layers.")
 
 
 FLAGS = tf.app.flags.FLAGS
@@ -192,11 +192,11 @@ def main():
     train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size)
     test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
-    #validation_steps = 4*5000/FLAGS.batch_size
+    validation_steps = (3*5000+375)/FLAGS.batch_size
     loss_history = siamese_model.fit_generator(train_batch_generator, 
                                                 validation_data = test_batch_generator,
                                                 steps_per_epoch = FLAGS.steps_per_epoch,
-                                                validation_steps = FLAGS.validation_steps,
+                                                validation_steps = validation_steps,
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True)
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     print("num_epochs is {}".format(FLAGS.num_epochs))
     print("batch_size is {}".format(FLAGS.batch_size))
     print("steps_per_epoch is {}".format(FLAGS.steps_per_epoch))
-    print("validation_steps is {}".format(FLAGS.validation_steps))
+    #print("validation_steps is {}".format(FLAGS.validation_steps))
 
     main()
 
