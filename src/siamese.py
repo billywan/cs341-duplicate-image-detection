@@ -64,8 +64,11 @@ def flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_nor
     feat_tensor = dense_with_bn(feat_tensor, FLAGS, out_dim, activation, batch_norm)
     return feat_tensor
 
-def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True):
-    feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=regularizers.l2(FLAGS.reg_rate))(feat_tensor)
+def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True, l2_reg=False):
+    kernel_regularizer=None
+    if l2_reg:
+        kernel_regularizer = regularizers.l2(FLAGS.reg_rate)
+    feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
     #use bn before activation
     if batch_norm: 
         feat_tensor = BatchNormalization()(feat_tensor)
@@ -78,7 +81,7 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_nor
 def get_prediction(src_feat, tar_feat, FLAGS, name="", dense_dims=PREDICTION_DENSE_DIMS):
     combined_feat = concatenate([src_feat, tar_feat], name='merge_features'+name)
     for dense_dims in PREDICTION_DENSE_DIMS:
-        combined_feat = dense_with_bn(combined_feat, FLAGS, out_dim=dense_dims)
+        combined_feat = dense_with_bn(combined_feat, FLAGS, out_dim=dense_dims, l2_reg=True)
     #A trick for bounded output range is to scale the target values between (0,1) and use sigmoid output + binary cross-entropy loss.
     prediction = Dense(1, activation = 'sigmoid')(combined_feat)
     return prediction
