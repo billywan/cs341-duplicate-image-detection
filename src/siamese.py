@@ -27,7 +27,7 @@ from keras.models import Model
 from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda
 from keras.utils import multi_gpu_model
 from keras.callbacks import ModelCheckpoint
-
+from keras import regularizers
 
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
 #DEFAULT_DATA_DIR = os.path.join(MAIN_DIR, "data") # relative path of data dir
@@ -65,7 +65,7 @@ def flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_nor
     return feat_tensor
 
 def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True):
-    feat_tensor = Dense(out_dim, activation = 'linear')(feat_tensor)
+    feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=regularizers.l2(FLAGS.reg_rate))(feat_tensor)
     #use bn before activation
     if batch_norm: 
         feat_tensor = BatchNormalization()(feat_tensor)
@@ -155,6 +155,7 @@ tf.app.flags.DEFINE_integer("batch_size", 200, "batch_size")
 tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
 tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
 tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
+tf.app.flags.DEFINE_float("reg_rate", 0.01, "Rate of regularization for each dense layers")
 
 
 FLAGS = tf.app.flags.FLAGS
@@ -170,6 +171,7 @@ def train(model, FLAGS):
     test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = 4*5000/FLAGS.batch_size
+    #test set currently has 15,375 pairs
 
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
     assert os.path.exists(train_dir)
