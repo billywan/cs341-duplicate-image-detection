@@ -28,6 +28,7 @@ from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activatio
 from keras.utils import multi_gpu_model
 from keras.callbacks import ModelCheckpoint
 from keras import regularizers
+import keras.backend as K
 
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
 #DEFAULT_DATA_DIR = os.path.join(MAIN_DIR, "data") # relative path of data dir
@@ -98,6 +99,13 @@ def aggregate_predictions(predictions):
     return score
 
 
+
+
+def get_loss_function(FLAGS):
+    def scaled_mse_loss(yTrue, yPred):
+        return FLAGS.loss_scale*K.mean(K.square(yTrue - yPred))
+    return scaled_mse_loss
+
 def build_model(FLAGS):
     #assign flags to global flag so other part of the code can use
     #GLOB_FLAGS = FLAGS
@@ -159,17 +167,22 @@ tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
 #tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
 tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
 tf.app.flags.DEFINE_float("reg_rate", 0.01, "Rate of regularization for each dense layers.")
+tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
 
 
 FLAGS = tf.app.flags.FLAGS
 
+def compile_model(model, FLAGS):
+    loss_func = get_loss_function(FLAGS)
+    model.compile(optimizer='adam', loss = loss_func, metrics = ['mae'])
 
 def train(model, FLAGS):
     if FLAGS.gpu > 1: #utilize multiple gpus
         siamese_model = multi_gpu_model(model, gpus=FLAGS.gpu)
     else:
         siamese_model = model
-    siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+    #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+    compile_model(siamese_model, FLAGS)
     train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size)
     test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
@@ -191,7 +204,9 @@ def train(model, FLAGS):
 def main():
     siamese_model = build_model(FLAGS)
     siamese_model = multi_gpu_model(siamese_model, gpus=4)
-    siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+    #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+    compile_model(siamese_model, FLAGS)
+
     train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size)
     test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
