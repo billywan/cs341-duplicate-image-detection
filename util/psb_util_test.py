@@ -25,6 +25,7 @@ import sys
 from keras.preprocessing import image
 from keras.applications.vgg16 import preprocess_input
 import numpy as np
+import random
 
 DATA_DIR = "/Users/EricX/Desktop/CS341/data_batches"
 
@@ -45,25 +46,26 @@ def unison_shuffled_data(a, b, c):
     return a[p], b[p], c[p]
 
 def batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches", batch_size=50):
+    data_files = [file for file in os.listdir(data_dir) if file.startswith('data_batch_')]
     while True:
-        for fn in os.listdir(data_dir):
-            if fn.startswith('data_batch_'):
-                print('loading file {}'.format(fn))
-                with open(os.path.join(data_dir, fn), 'rb') as handle:
-                    data_dict = pickle.load(handle)
-                    X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
-                    X0, X1, y = X0.astype(np.float64), X1.astype(np.float64), y.astype(np.float64)
-                    #X0, X1, y = unison_shuffled_data(X0, X1, y)
-                    print(X0.shape, X1.shape, y.shape)
-                    print('Preprocessing input...')
-                    X0, X1 = preprocess_input(X0), preprocess_input(X1)
-                    print('Done preprocessing')
-                    for i in range(0, X0.shape[0], batch_size):
-                        X0_batch = X0[i:i+batch_size]
-                        X1_batch = X1[i:i+batch_size]
-                        y_batch = y[i:i+batch_size]
-                        #print "yielding next batch..."
-                        yield [X0_batch, X1_batch], y_batch
+        random.shuffle(data_files)
+        for file in data_files:
+            print('\nLoading file {}\n'.format(file))
+            with open(os.path.join(data_dir, file), 'rb') as handle:
+                data_dict = pickle.load(handle)
+                X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
+                X0, X1, y = X0.astype(np.float32), X1.astype(np.float32), y.astype(np.float32)
+                #X0, X1, y = unison_shuffled_data(X0, X1, y)
+                #print(X0.shape, X1.shape, y.shape)
+                #print('Preprocessing input...')
+                X0, X1 = preprocess_input(X0), preprocess_input(X1)
+                #print('Done preprocessing.')
+                for i in range(0, X0.shape[0], batch_size):
+                    X0_batch = X0[i:i+batch_size]
+                    X1_batch = X1[i:i+batch_size]
+                    y_batch = y[i:i+batch_size]
+                    #print "yielding next batch..."
+                    yield [X0_batch, X1_batch], y_batch
 
 def make_binary(X0, X1, y):
     X0 = X0[y!=0.5]
@@ -79,14 +81,14 @@ def batch_generator_binary(data_dir="/Users/EricX/Desktop/CS341/data_batches", b
                 with open(os.path.join(data_dir, fn), 'rb') as handle:
                     data_dict = pickle.load(handle)
                     X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
-                    X0, X1, y = X0.astype(np.float64), X1.astype(np.float64), y.astype(np.float64)
+                    X0, X1, y = X0.astype(np.float32), X1.astype(np.float32), y.astype(np.float32)
                     X0, X1, y = make_binary(X0, X1, y)
                     #X0, X1, y = unison_shuffled_data(X0, X1, y)
-                    print(X0.shape, X1.shape, y.shape)
-                    print('Preprocessing input...')
+                    #print(X0.shape, X1.shape, y.shape)
+                    #print('Preprocessing input...')
                     assert len(y[y==0.5]) == 0
                     X0, X1 = preprocess_input(X0), preprocess_input(X1)
-                    print('Done preprocessing')
+                    #print('Done preprocessing')
                     for i in range(0, X0.shape[0], batch_size):
                         X0_batch = X0[i:i+batch_size]
                         X1_batch = X1[i:i+batch_size]

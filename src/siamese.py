@@ -14,7 +14,7 @@ from functools import partial
 #adding parent/util directory to the system path, so that any file in the util package can be imported
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'util'))
 import psb_util_test as psb_util
-
+#from main import MAIN_DIR, EXPERIMENTS_DIR, MODEL_CHECKPOINT_NAME
 
 #keras related imports
 import tensorflow as tf
@@ -26,9 +26,16 @@ from keras.models import Model
 from keras.models import Model
 from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda
 from keras.utils import multi_gpu_model
+from keras.callbacks import ModelCheckpoint
+from keras import regularizers
+import keras.backend as K
 
+MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
+#DEFAULT_DATA_DIR = os.path.join(MAIN_DIR, "data") # relative path of data dir
+EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
+MODEL_CHECKPOINT_NAME = 'model.hdf5'
 
-
+#GLOB_FLAGS = {}
 IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
 #VGG_MODEL.summary()
@@ -53,25 +60,29 @@ def get_feature_model(base_model=VGG_MODEL, output_layer_names=FEAT_LAYERS):
 
 
 
-def flatten_dense(feat_tensor, out_dim=1024, activation='relu', batch_norm=True):
+def flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True):
     feat_tensor = Flatten()(feat_tensor)
-    feat_tensor = dense_with_bn(feat_tensor, out_dim, activation, batch_norm)
+    feat_tensor = dense_with_bn(feat_tensor, FLAGS, out_dim, activation, batch_norm)
     return feat_tensor
 
-def dense_with_bn(feat_tensor, out_dim=1024, activation='relu', batch_norm=True, dropout=False):
-    feat_tensor = Dense(out_dim, activation = 'linear')(feat_tensor)
+def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True, l2_reg=False):
+    kernel_regularizer=None
+    if l2_reg:
+        kernel_regularizer = regularizers.l2(FLAGS.reg_rate)
+    feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
     #use bn before activation
     if batch_norm: 
         feat_tensor = BatchNormalization()(feat_tensor)
     feat_tensor = Activation(activation)(feat_tensor)
-    if dropout:
-        feat_tensor = Dropout(drop_rate)(feat_tensor)
+    if FLAGS.dropout != 0:
+        print "dropout is {}".format(FLAGS.dropout)
+        feat_tensor = Dropout(FLAGS.dropout)(feat_tensor)
     return feat_tensor
 
-def get_prediction(src_feat, tar_feat, name, dense_dims=PREDICTION_DENSE_DIMS):
+def get_prediction(src_feat, tar_feat, FLAGS, name="", dense_dims=PREDICTION_DENSE_DIMS):
     combined_feat = concatenate([src_feat, tar_feat], name='merge_features'+name)
     for dense_dims in PREDICTION_DENSE_DIMS:
-        combined_feat = dense_with_bn(combined_feat, out_dim=dense_dims)
+        combined_feat = dense_with_bn(combined_feat, FLAGS, out_dim=dense_dims, l2_reg=True)
     #A trick for bounded output range is to scale the target values between (0,1) and use sigmoid output + binary cross-entropy loss.
     prediction = Dense(1, activation = 'sigmoid')(combined_feat)
     return prediction
@@ -88,7 +99,16 @@ def aggregate_predictions(predictions):
     return score
 
 
-def build_model(FLAGS={}):
+
+
+def get_loss_function(FLAGS):
+    def scaled_mse_loss(yTrue, yPred):
+        return FLAGS.loss_scale*K.mean(K.square(yTrue - yPred))
+    return scaled_mse_loss
+
+def build_model(FLAGS):
+    #assign flags to global flag so other part of the code can use
+    #GLOB_FLAGS = FLAGS
     src_in = Input(shape = IMG_SHAPE, name = 'src_input')
     tar_in = Input(shape = IMG_SHAPE, name = 'tar_input')
     feature_model = get_feature_model() 
@@ -97,9 +117,9 @@ def build_model(FLAGS={}):
     assert len(src_feats) == len(FEAT_LAYERS)
     assert len(tar_feats) == len(FEAT_LAYERS)
     feat_pairs_by_layer = zip(src_feats, tar_feats)
-    feat_pairs_dense = [(flatten_dense(src_feat, 1024, 'relu', True), flatten_dense(tar_feat, 1024, 'relu', True))\
+    feat_pairs_dense = [(flatten_dense(src_feat, FLAGS, 1024, 'relu', True), flatten_dense(tar_feat, FLAGS, 1024, 'relu', True))\
                         for (src_feat, tar_feat) in feat_pairs_by_layer]
-    predictions_by_layer = [get_prediction(src_feat, tar_feat, str(i)) for i, (src_feat, tar_feat) in enumerate(feat_pairs_dense)]
+    predictions_by_layer = [get_prediction(src_feat, tar_feat, FLAGS, str(i)) for i, (src_feat, tar_feat) in enumerate(feat_pairs_dense)]
     assert len(predictions_by_layer) == len(FEAT_LAYERS)
 
     final_score = aggregate_predictions(predictions_by_layer)
@@ -142,24 +162,58 @@ def build_model(FLAGS={}):
 
 
 tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
-tf.app.flags.DEFINE_integer("batch_size", 400, "batch_size")
+tf.app.flags.DEFINE_integer("batch_size", 200, "batch_size")
+tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
+#tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
+tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
+tf.app.flags.DEFINE_float("reg_rate", 0.01, "Rate of regularization for each dense layers.")
+tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
+
 
 FLAGS = tf.app.flags.FLAGS
 
+def compile_model(model, FLAGS):
+    loss_func = get_loss_function(FLAGS)
+    model.compile(optimizer='adam', loss = loss_func, metrics = ['mae'])
 
+def train(model, FLAGS):
+    if FLAGS.gpu > 1: #utilize multiple gpus
+        siamese_model = multi_gpu_model(model, gpus=FLAGS.gpu)
+    else:
+        siamese_model = model
+    #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+    compile_model(siamese_model, FLAGS)
+    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size)
+    test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
+    #steps_per_epoch = 28*5000/FLAGS.batch_size
+    #validation_steps = 4*5000/FLAGS.batch_size
+    #test set currently has 15,375 pairs
 
+    train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
+    assert os.path.exists(train_dir)
+
+    checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), verbose=1, save_best_only=True)
+    loss_history = siamese_model.fit_generator(train_batch_generator, 
+                                                validation_data = test_batch_generator,
+                                                steps_per_epoch = FLAGS.steps_per_epoch,
+                                                validation_steps = FLAGS.validation_steps,
+                                                epochs = FLAGS.num_epochs,
+                                                verbose = True,
+                                                callbacks = [checkpointer])
 
 def main():
-    siamese_model = build_model()
-    parallel_siamese = multi_gpu_model(siamese_model, gpus=4)
-    parallel_siamese.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
-    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches")
-    test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test")
-    steps_per_epoch = 28*5000/FLAGS.batch_size
-    validation_steps = 4*5000/FLAGS.batch_size
-    loss_history = parallel_siamese.fit_generator(train_batch_generator, 
+    siamese_model = build_model(FLAGS)
+    siamese_model = multi_gpu_model(siamese_model, gpus=4)
+    #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+    compile_model(siamese_model, FLAGS)
+
+    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size)
+    test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
+    #steps_per_epoch = 28*5000/FLAGS.batch_size
+    validation_steps = (3*5000+375)/FLAGS.batch_size
+    loss_history = siamese_model.fit_generator(train_batch_generator, 
                                                 validation_data = test_batch_generator,
-                                                steps_per_epoch = steps_per_epoch,
+                                                steps_per_epoch = FLAGS.steps_per_epoch,
                                                 validation_steps = validation_steps,
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True)
@@ -171,6 +225,8 @@ def main():
 if __name__ == "__main__":
     print("num_epochs is {}".format(FLAGS.num_epochs))
     print("batch_size is {}".format(FLAGS.batch_size))
+    print("steps_per_epoch is {}".format(FLAGS.steps_per_epoch))
+    #print("validation_steps is {}".format(FLAGS.validation_steps))
 
     main()
 

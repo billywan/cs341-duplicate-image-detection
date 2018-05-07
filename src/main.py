@@ -17,12 +17,15 @@ import siamese
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
 #DEFAULT_DATA_DIR = os.path.join(MAIN_DIR, "data") # relative path of data dir
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
+MODEL_CHECKPOINT_NAME = 'model.hdf5'
 
 # High-level options
-tf.app.flags.DEFINE_integer("gpu", 0, "Which GPU to use, if you have multiple.")
+tf.app.flags.DEFINE_integer("gpu", 4, "How many GPU to use, if you have multiple.")
 tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval")
 tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
 tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
+tf.app.flags.DEFINE_integer("steps_per_epoch", 200, "batch_size")
+tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
 
 # Hyperparameters
 tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
@@ -50,7 +53,7 @@ def initialize_model(expect_exists=False):
     # Setup experiment dir
     # if expect_exists:
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
-    model_file_path = os.path.join(train_dir, "model.h5")
+    model_file_path = os.path.join(train_dir, MODEL_CHECKPOINT_NAME)
     if not os.path.exists(model_file_path):
         if expect_exists:
             raise Exception("No existing model found at %s"%model_file_path)
@@ -83,7 +86,7 @@ def main(unused_argv):
 
     if FLAGS.mode == "train":
         model = initialize_model(expect_exists=False)
-        #model.train()
+        siamese.train(model, FLAGS)
     elif FLAGS.mode == "eval":
         model = initialize_model(expect_exists=True)
         #model.predict()
@@ -94,7 +97,8 @@ def main(unused_argv):
 
 
 if __name__ == "__main__":
-    main()
+    #main()
+    tf.app.run()
 
 
 
