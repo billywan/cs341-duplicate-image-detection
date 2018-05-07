@@ -7,6 +7,7 @@ import os
 import argparse
 import numpy as np
 import leargist
+import pickle
 from PIL import Image
 from sklearn.metrics.pairwise import rbf_kernel
 
@@ -114,15 +115,12 @@ def main():
             help='number of hash bits (number of hash function to create, b in paper)')
     parser.add_argument('-np', dest='np', nargs='?', default=250, type=int,
             help='number of permutations in nearest neighbor search. For epsilon-approx, use 2n^(1/(1+epsilon)) permutations')
-    parser.add_argument('-q', dest='query', nargs='?', default='../../query',
-            help='Specify path for query image(s)')
     parser.add_argument('--param', dest='param', nargs='?', default='../param',
             help='Specify path for LSH parameters')
     (options, args) = parser.parse_known_args()
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-    DATA_DIR = os.path.join(PROJECT_DIR, "../../CASIA")
-    QUERY_DIR = os.path.join(PROJECT_DIR, options.query)
+    DATA_DIR = "/mnt/data/photoshopbattle_images"
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
 
     if os.path.exists(PARAM_DIR):
@@ -133,13 +131,19 @@ def main():
         KMean = np.load(os.path.join(PARAM_DIR, 'KMean.npy'))
         klsh = KLSH(W=W, sample=sample, KMean0=KMean0, KMean=KMean)
         H = np.load(os.path.join(PARAM_DIR, 'H.npy'))
+        submissionList = pickle.load(open(os.path.join(PARAM_DIR, 'submissions')))
     else:
         os.mkdir(PARAM_DIR)
         X = []
+        submissionList = []
         print "Existing parameters not found, computing input gist vectors..."
-        for file in sorted(os.listdir(DATA_DIR)):
-            im = Image.open(os.path.join(DATA_DIR, file))
-            X.append(leargist.color_gist(im))
+        for dirName, _, fileList in os.walk(DATA_DIR):
+            if len(fileList) > 1:
+                submission = sorted(fileList)[0]
+                submissionList.append(submission)
+                im = Image.open(os.path.join(dirName, submission))
+                X.append(leargist.color_gist(im))
+        pickle.dump(submissionList, open(os.path.join(PARAM_DIR, 'submissions')))
         klsh = KLSH(np.array(X), p=options.p, t=options.t, b=options.b)
         klsh.save_params(PARAM_DIR)
         H = klsh.compute_hash_table(np.array(X))
@@ -147,10 +151,10 @@ def main():
 
     # print H[22]
     Q = []
-    for file in os.listdir(QUERY_DIR):
+    for file in os.listdir(DATA_DIR):
         # ignore hidden files
         if not file.startswith('.'):
-            im = Image.open(os.path.join(QUERY_DIR, file))
+            im = Image.open(os.path.join(DATA_DIR, file))
             Q.append(leargist.color_gist(im))
 
     print "Hashing query gist vectors..."

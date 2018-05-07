@@ -23,7 +23,6 @@ from keras.preprocessing import image
 # from keras.applications.imagenet_utils import decode_predictions, preprocess_input
 from keras.applications.vgg16 import preprocess_input
 from keras.models import Model
-from keras.models import Model
 from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda
 from keras.utils import multi_gpu_model
 from keras.callbacks import ModelCheckpoint
@@ -71,7 +70,7 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_nor
         kernel_regularizer = regularizers.l2(FLAGS.reg_rate)
     feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
     #use bn before activation
-    if batch_norm: 
+    if batch_norm:
         feat_tensor = BatchNormalization()(feat_tensor)
     feat_tensor = Activation(activation)(feat_tensor)
     if FLAGS.dropout != 0:
@@ -98,9 +97,6 @@ def aggregate_predictions(predictions):
     score = Lambda(weighted_average, arguments={'weights':SCORE_WEIGHTS})(predictions)
     return score
 
-
-
-
 def get_loss_function(FLAGS):
     def scaled_mse_loss(yTrue, yPred):
         return FLAGS.loss_scale*K.mean(K.square(yTrue - yPred))
@@ -111,7 +107,7 @@ def build_model(FLAGS):
     #GLOB_FLAGS = FLAGS
     src_in = Input(shape = IMG_SHAPE, name = 'src_input')
     tar_in = Input(shape = IMG_SHAPE, name = 'tar_input')
-    feature_model = get_feature_model() 
+    feature_model = get_feature_model()
     src_feats = feature_model(src_in) #list of features from all layers in FEAT_LAYERS
     tar_feats = feature_model(tar_in)
     assert len(src_feats) == len(FEAT_LAYERS)
@@ -193,7 +189,7 @@ def train(model, FLAGS):
     assert os.path.exists(train_dir)
 
     checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), verbose=1, save_best_only=True)
-    loss_history = siamese_model.fit_generator(train_batch_generator, 
+    loss_history = siamese_model.fit_generator(train_batch_generator,
                                                 validation_data = test_batch_generator,
                                                 steps_per_epoch = FLAGS.steps_per_epoch,
                                                 validation_steps = FLAGS.validation_steps,
@@ -211,7 +207,7 @@ def main():
     test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     validation_steps = (3*5000+375)/FLAGS.batch_size
-    loss_history = siamese_model.fit_generator(train_batch_generator, 
+    loss_history = siamese_model.fit_generator(train_batch_generator,
                                                 validation_data = test_batch_generator,
                                                 steps_per_epoch = FLAGS.steps_per_epoch,
                                                 validation_steps = validation_steps,
@@ -229,29 +225,3 @@ if __name__ == "__main__":
     #print("validation_steps is {}".format(FLAGS.validation_steps))
 
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
