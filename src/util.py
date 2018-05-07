@@ -20,10 +20,10 @@ def generate_permutations(bitVectors, numPermutations):
         permutedIdx = np.random.permutation(b)
         permutedVectors = bitVectors[:, permutedIdx]
         # [(0, [0, 0, 0]), (2, [0, 0, 1]), (1, [0, 1, 0]), (3, [1, 0, 0]), (5, [1, 0, 1]), (4, [1, 1, 0]), ...]
-        sortedPermutedVectorsWithIndex = sorted(enumerate(permutedVectors), key=itemgetter(1))
+        sortedPermutedVectorsWithIndex = sorted(enumerate(permutedVectors.tolist()), key=itemgetter(1))
         # [(0, 2, 1, 3, 5, 4, ...), ([0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0], [1, 0, 1], [1, 1, 0], ...)]
         sortedIdx, sortedData = zip(*sortedPermutedVectorsWithIndex)
-        permutations.append(sortedData, sortedIdx, permutedIdx)
+        permutations.append(Permutation(sortedData, sortedIdx, permutedIdx))
     return permutations
 
 def lookup(permutations, query):
@@ -40,8 +40,7 @@ def lookup(permutations, query):
             permutedQuery = [q[i] for i in permutation.permutedIdx]
             try:
                 idx = permutation.sortedData.index(permutedQuery)
-                uniqueIndices.update(permutation.sortedIdx[idx - 2*numPermutations:idx + 2*numPermutations])
-                # uniqueIndices.remove(permutation.sortedIdx[idx])
+                uniqueIndices.update(permutation.sortedIdx[max(idx - 2*numPermutations, 0):min(idx + 2*numPermutations, len(permutation.sortedIdx))])
             except ValueError:
                 print "query not found in hash table!!!"
         candidates.append(list(uniqueIndices))
