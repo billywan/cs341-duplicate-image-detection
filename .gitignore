@@ -112,3 +112,6 @@ ENV/
 # data
 data/
 Preprocessed_CASIA_Dataset/
+
+# saved params
+param/

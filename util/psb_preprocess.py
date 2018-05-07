@@ -26,6 +26,7 @@ from PIL import Image
 import pickle
 import random
 import shutil
+import sys
 
 # Some constants
 DISK_DIR = "/mnt/data"
