@@ -5,6 +5,7 @@ Some code based on https://github.com/jakevdp/klsh and https://github.com/emchri
 
 import os
 import argparse
+import random
 import numpy as np
 import leargist
 import pickle
@@ -140,7 +141,7 @@ def main():
         for dirName, _, fileList in os.walk(DATA_DIR):
             if len(fileList) > 1:
                 submission = sorted(fileList)[0]
-                submissionList.append(submission)
+                submissionList.append(submission.rsplit('.', 1)[0])
                 im = Image.open(os.path.join(dirName, submission))
                 X.append(leargist.color_gist(im))
         pickle.dump(submissionList, open(os.path.join(PARAM_DIR, 'submissions')))
@@ -151,11 +152,14 @@ def main():
 
     # print H[22]
     Q = []
-    for file in os.listdir(DATA_DIR):
-        # ignore hidden files
-        if not file.startswith('.'):
-            im = Image.open(os.path.join(DATA_DIR, file))
-            Q.append(leargist.color_gist(im))
+    queryList = []
+    print "Randomly pick 100 query images..."
+    dirAndFiles = random.sample([(dirName, fileList) for dirName, _, fileList in os.walk(DATA_DIR) if len(fileList) > 1], 100)
+    for dir, files in dirAndFiles:
+        query = random.choice(sorted(files)[1:])
+        queryList.append(query)
+        im = Image.open(os.path.join(dir, query))
+        Q.append(leargist.color_gist(im))
 
     print "Hashing query gist vectors..."
     # [q, b]
@@ -166,8 +170,16 @@ def main():
     permutations = util.generate_permutations(H, options.np)
     print "Searching for query and generating candidates..."
     candidates = util.lookup(permutations, H_Q)
+    positive_count = 0
     for i, candidate in enumerate(candidates):
-        print "Found {} candidates for query {}: ".format(len(candidate), i), candidate
+        print "Found {} candidates for query {}: ".format(len(candidate), i)
+        try:
+            idx = submissionList.index(queryList[i].rsplit('_', 1))
+            if idx in candidate:
+                positive_count += 1
+        except ValueError:
+            print "Unexpected error: query's original not found in submission list"
+    print "Original found in candidates for {}%% of images".format(1.0 * positive_count)
 
 if __name__ == "__main__":
     main()
