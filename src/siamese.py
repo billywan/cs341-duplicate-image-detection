@@ -40,7 +40,7 @@ IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
 #VGG_MODEL.summary()
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
-SCORE_WEIGHTS = [0.5, 0.5]
+SCORE_WEIGHTS = [0.2, 0.8]
 #infer how many dense layers used for prediction
 PREDICTION_DENSE_DIMS = [1024, 1024]
 drop_rate = 0.15
@@ -166,7 +166,7 @@ tf.app.flags.DEFINE_integer("batch_size", 200, "batch_size")
 tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
 #tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
 tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
-tf.app.flags.DEFINE_float("reg_rate", 0.01, "Rate of regularization for each dense layers.")
+tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
 tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
 
 
