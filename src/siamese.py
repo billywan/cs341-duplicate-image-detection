@@ -39,7 +39,7 @@ IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
 #VGG_MODEL.summary()
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
-SCORE_WEIGHTS = [0.2, 0.8]
+SCORE_WEIGHTS = [0.5, 0.5]
 #infer how many dense layers used for prediction
 PREDICTION_DENSE_DIMS = [1024, 1024]
 drop_rate = 0.15
