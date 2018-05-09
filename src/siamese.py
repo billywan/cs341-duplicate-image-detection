@@ -170,7 +170,7 @@ FLAGS = tf.app.flags.FLAGS
 
 def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
-    model.compile(optimizer='adam', loss = loss_func, metrics = ['mae'])
+    model.compile(optimizer='adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
 
 def train(model, FLAGS):
     if FLAGS.gpu > 1: #utilize multiple gpus
