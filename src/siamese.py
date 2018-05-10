@@ -23,7 +23,7 @@ from keras.preprocessing import image
 # from keras.applications.imagenet_utils import decode_predictions, preprocess_input
 from keras.applications.vgg16 import preprocess_input
 from keras.models import Model
-from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda
+from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda, GlobalAveragePooling2D
 from keras.utils import multi_gpu_model
 from keras.callbacks import ModelCheckpoint
 from keras import regularizers
@@ -38,19 +38,62 @@ MODEL_CHECKPOINT_NAME = 'model.hdf5'
 IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
 #VGG_MODEL.summary()
+RESNET_MODEL = keras.applications.resnet50.ResNet50(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=1000)
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
 #infer how many dense layers used for prediction
 PREDICTION_DENSE_DIMS = [1024, 1024]
 drop_rate = 0.15
 
+def get_feat_layers(FLAGS):
+    if FLAGS.base_model == "vgg16":
+        return ['block4_pool', 'block5_pool']
+    elif FLAGS.base_model == "resnet50":
+        return ['max_pooling2d_1', 'activation_10', 'activation_22', 'activation_40', 'activation_49']
+    else:
+        raise Exception("base_model {} invalid".format(FLAGS.base_model))
+
+def get_feat_weights(FLAGS):
+    if FLAGS.base_model == "vgg16":
+        return [0.5, 0.5]
+    elif FLAGS.base_model == "resnet50":
+        return [0.1, 0.1, 0.1, 0.2, 0.5]
+    else:
+        raise Exception("base_model {} invalid".format(FLAGS.base_model))
+
+# def get_resnet_feat_layers():
+#     #channel dims: 64, 256, 512, 1024, 2048
+#     layers = ['max_pooling2d_1', 'activation_10', 'activation_22', 'activation_40', 'activation_49']
+#     return layers
+
+# def get_resnet_feat_weights():
+#     weights = [0.1, 0.1, 0.1, 0.2, 0.5]
+#     #channel dims: 64, 256, 512, 1024, 2048
+#     return weights    
+
+# def get_vgg_feat_layers():
+#     layers = ['block4_pool', 'block5_pool']
+#     return layers
+
+# def get_vgg_feat_weights():
+#     weights = [0.5, 0.5]
+#     return weights
 
 
+def get_base_model(FLAGS):
+    if FLAGS.base_model == "vgg16":
+        return VGG_MODEL
+    elif FLAGS.base_model == "resnet50":
+        return RESNET_MODEL
+    else:
+        raise Exception("base_model {} invalid".format(FLAGS.base_model))
 
-def get_feature_model(base_model=VGG_MODEL, output_layer_names=FEAT_LAYERS):
+def get_feature_model(FLAGS):
+    output_layer_names = get_feat_layers(FLAGS)
     assert type(output_layer_names) == list
+    base_model = get_base_model(FLAGS)
     outputs = [base_model.get_layer(name).output for name in output_layer_names]
-    feature_model = Model(inputs=base_model.input, outputs=outputs, name = 'Feature_Model')
+    feature_model = Model(inputs=base_model.input, outputs=outputs, name = 'Feature_Model_'+FLAGS.base_model)
     #feature_model.summary()
     #feature model is kept frozen
     for layer in feature_model.layers:
@@ -86,7 +129,7 @@ def get_prediction(src_feat, tar_feat, FLAGS, name="", dense_dims=PREDICTION_DEN
     prediction = Dense(1, activation = 'sigmoid')(combined_feat)
     return prediction
 
-def aggregate_predictions(predictions):
+def aggregate_predictions(FLAGS, predictions):
     def weighted_average(a, weights):
         assert len(a) == len(weights)
         res = 0.0
@@ -94,7 +137,7 @@ def aggregate_predictions(predictions):
             res += m*n
         return res
 
-    score = Lambda(weighted_average, arguments={'weights':SCORE_WEIGHTS})(predictions)
+    score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
     return score
 
 def get_loss_function(FLAGS):
@@ -102,23 +145,38 @@ def get_loss_function(FLAGS):
         return FLAGS.loss_scale*K.mean(K.square(yTrue - yPred))
     return scaled_mse_loss
 
+
+def resnet_flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True):
+    feat_tensor = GlobalAveragePooling2D()(feat_tensor)
+    #feat_tensor = Flatten()(feat_tensor)
+    print feat_tensor.shape
+    feat_tensor = dense_with_bn(feat_tensor, FLAGS, out_dim, activation, batch_norm)
+    return feat_tensor
+
 def build_model(FLAGS):
     #assign flags to global flag so other part of the code can use
     #GLOB_FLAGS = FLAGS
     src_in = Input(shape = IMG_SHAPE, name = 'src_input')
     tar_in = Input(shape = IMG_SHAPE, name = 'tar_input')
-    feature_model = get_feature_model()
+    feature_model = get_feature_model(FLAGS)
     src_feats = feature_model(src_in) #list of features from all layers in FEAT_LAYERS
     tar_feats = feature_model(tar_in)
-    assert len(src_feats) == len(FEAT_LAYERS)
-    assert len(tar_feats) == len(FEAT_LAYERS)
+    assert len(src_feats) == len(get_feat_layers(FLAGS))
+    assert len(tar_feats) == len(get_feat_layers(FLAGS))
     feat_pairs_by_layer = zip(src_feats, tar_feats)
-    feat_pairs_dense = [(flatten_dense(src_feat, FLAGS, 1024, 'relu', True), flatten_dense(tar_feat, FLAGS, 1024, 'relu', True))\
-                        for (src_feat, tar_feat) in feat_pairs_by_layer]
-    predictions_by_layer = [get_prediction(src_feat, tar_feat, FLAGS, str(i)) for i, (src_feat, tar_feat) in enumerate(feat_pairs_dense)]
-    assert len(predictions_by_layer) == len(FEAT_LAYERS)
+    if FLAGS.base_model == "vgg16":
+        feat_pairs_dense = [(flatten_dense(src_feat, FLAGS, 1024, 'relu', True), flatten_dense(tar_feat, FLAGS, 1024, 'relu', True))\
+                            for (src_feat, tar_feat) in feat_pairs_by_layer]
+        predictions_by_layer = [get_prediction(src_feat, tar_feat, FLAGS, str(i)) for i, (src_feat, tar_feat) in enumerate(feat_pairs_dense)]
+    elif FLAGS.base_model == "resnet50":
+        feat_pairs_dense = [(resnet_flatten_dense(src_feat, FLAGS, 1024, 'relu', True), resnet_flatten_dense(tar_feat, FLAGS, 1024, 'relu', True))\
+                            for (src_feat, tar_feat) in feat_pairs_by_layer]
+        predictions_by_layer = [get_prediction(src_feat, tar_feat, FLAGS, str(i)) for i, (src_feat, tar_feat) in enumerate(feat_pairs_dense)]
+    else:
+        raise Exception("base_model {} invalid".format(FLAGS.base_model))
+    assert len(predictions_by_layer) == len(get_feat_layers(FLAGS))
 
-    final_score = aggregate_predictions(predictions_by_layer)
+    final_score = aggregate_predictions(FLAGS, predictions_by_layer)
 
     siamese_model = Model(inputs=[src_in, tar_in], outputs = [final_score], name = 'Similarity_Model')
     siamese_model.summary()
@@ -164,6 +222,7 @@ tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
 tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
 tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
 tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
+tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
 
 
 FLAGS = tf.app.flags.FLAGS
