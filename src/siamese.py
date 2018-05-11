@@ -55,11 +55,13 @@ def get_feat_layers(FLAGS):
 
 def get_feat_weights(FLAGS):
     if FLAGS.base_model == "vgg16":
-        return [0.5, 0.5]
+        weights = [0.5, 0.5]
     elif FLAGS.base_model == "resnet50":
-        return [0.1, 0.1, 0.1, 0.2, 0.5]
+        weights = [0.1, 0.1, 0.1, 0.2, 0.5]
     else:
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
+    assert np.sum(weights) == 1.0
+    return weights
 
 # def get_resnet_feat_layers():
 #     #channel dims: 64, 256, 512, 1024, 2048
@@ -98,6 +100,7 @@ def get_feature_model(FLAGS):
     #feature model is kept frozen
     for layer in feature_model.layers:
         layer.trainable=False
+    feature_model.summary()
     return feature_model
 
 
@@ -176,6 +179,9 @@ def build_model(FLAGS):
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert len(predictions_by_layer) == len(get_feat_layers(FLAGS))
 
+    for i, score in enumerate(predictions_by_layer):
+        predictions_by_layer[i] = K.print_tensor(score, message='score {} = '.format(i))
+
     final_score = aggregate_predictions(FLAGS, predictions_by_layer)
 
     siamese_model = Model(inputs=[src_in, tar_in], outputs = [final_score], name = 'Similarity_Model')
@@ -226,6 +232,23 @@ tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature ex
 
 
 FLAGS = tf.app.flags.FLAGS
+
+
+
+
+class PrintScores(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        K.function()
+        
+
+    
+
+
+
+
+
+
+
 
 def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
