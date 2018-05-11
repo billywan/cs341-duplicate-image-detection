@@ -23,7 +23,7 @@ from keras.preprocessing import image
 # from keras.applications.imagenet_utils import decode_predictions, preprocess_input
 from keras.applications.vgg16 import preprocess_input
 from keras.models import Model
-from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda, GlobalAveragePooling2D
+from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda, GlobalAveragePooling2D, Dot
 from keras.utils import multi_gpu_model
 from keras.callbacks import ModelCheckpoint
 from keras import regularizers
@@ -140,6 +140,9 @@ def aggregate_predictions(FLAGS, predictions):
             res += m*n
         return res
 
+
+    def test(a, weights):
+        return Dot()(a, weights)
     score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
     return score
 
