@@ -236,9 +236,9 @@ FLAGS = tf.app.flags.FLAGS
 
 
 
-class PrintScores(keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs={}):
-        K.function()
+# class PrintScores(keras.callbacks.Callback):
+#     def on_epoch_end(self, epoch, logs={}):
+#         K.function()
         
 
     
