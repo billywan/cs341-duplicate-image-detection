@@ -141,9 +141,9 @@ def aggregate_predictions(FLAGS, predictions):
         return res
 
 
-    def test(a, weights):
-        return Dot()(a, weights)
-    score = Lambda(test, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
+    # def test(a, weights):
+    #     return Dot(1)(a, weights)
+    score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
     return score
 
 def get_loss_function(FLAGS):
@@ -182,8 +182,8 @@ def build_model(FLAGS):
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert len(predictions_by_layer) == len(get_feat_layers(FLAGS))
 
-    for i, score in enumerate(predictions_by_layer):
-        predictions_by_layer[i] = K.print_tensor(score, message='score {} = '.format(i))
+    # for i, score in enumerate(predictions_by_layer):
+    #     predictions_by_layer[i] = K.print_tensor(score, message='score {} = '.format(i))
 
     final_score = aggregate_predictions(FLAGS, predictions_by_layer)
 
