@@ -143,7 +143,7 @@ def aggregate_predictions(FLAGS, predictions):
 
     def test(a, weights):
         return Dot()(a, weights)
-    score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
+    score = Lambda(test, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
     return score
 
 def get_loss_function(FLAGS):
