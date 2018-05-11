@@ -118,14 +118,14 @@ def main():
             help='number of permutations in nearest neighbor search. For epsilon-approx, use 2n^(1/(1+epsilon)) permutations')
     parser.add_argument('--param', dest='param', nargs='?', default='../param',
             help='Specify path for LSH parameters')
-    parser.add_argument('--data', dest='data', nargs='?', default='../data',
+    parser.add_argument('--input', dest='input', nargs='?', default='../data',
             help='Specify path for LSH processed input data')
     (options, args) = parser.parse_known_args()
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
     DATA_DIR = "/mnt/data/photoshopbattle_images"
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
-    DATA_DIR = os.path.join(PROJECT_DIR, options.data)
+    INPUT_DIR = os.path.join(PROJECT_DIR, options.data)
 
     if os.path.exists(PARAM_DIR):
         print "Found existing parameters, loading..."
@@ -135,13 +135,13 @@ def main():
         KMean = np.load(os.path.join(PARAM_DIR, 'KMean.npy'))
         klsh = KLSH(W=W, sample=sample, KMean0=KMean0, KMean=KMean)
         H = np.load(os.path.join(PARAM_DIR, 'H.npy'))
-        submissionList = pickle.load(open(os.path.join(DATA_DIR, 'submissions'), 'rb'))
+        submissionList = pickle.load(open(os.path.join(INPUT_DIR, 'submissions'), 'rb'))
     else:
         os.mkdir(PARAM_DIR)
-        if os.path.exists(os.path.join(DATA_DIR, 'X.npy')):
+        if os.path.exists(os.path.join(INPUT_DIR, 'X.npy')):
             print "Found input gist vectors, loading..."
-            X = np.load(os.path.join(DATA_DIR, 'X.npy'))
-            submissionList = pickle.load(open(os.path.join(DATA_DIR, 'submissions'), 'rb'))
+            X = np.load(os.path.join(INPUT_DIR, 'X.npy'))
+            submissionList = pickle.load(open(os.path.join(INPUT_DIR, 'submissions'), 'rb'))
         else:
             print "Existing input gist vectors not found, computing..."
             X = []
@@ -156,8 +156,8 @@ def main():
                     except:
                         print("Unable to open image in {}".format(dirName))
             X = np.array(X)
-            np.save(os.path.join(DATA_DIR, 'X.npy'), X)
-            pickle.dump(submissionList, open(os.path.join(DATA_DIR, 'submissions'), 'wb'))
+            np.save(os.path.join(INPUT_DIR, 'X.npy'), X)
+            pickle.dump(submissionList, open(os.path.join(INPUT_DIR, 'submissions'), 'wb'))
         klsh = KLSH(X, p=options.p, t=options.t, b=options.b)
         klsh.save_params(PARAM_DIR)
         H = klsh.compute_hash_table(np.array(X))
