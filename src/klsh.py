@@ -125,7 +125,7 @@ def main():
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
     DATA_DIR = "/mnt/data/photoshopbattle_images"
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
-    INPUT_DIR = os.path.join(PROJECT_DIR, options.data)
+    INPUT_DIR = os.path.join(PROJECT_DIR, options.input)
 
     if os.path.exists(PARAM_DIR):
         print "Found existing parameters, loading..."
