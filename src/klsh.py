@@ -118,11 +118,14 @@ def main():
             help='number of permutations in nearest neighbor search. For epsilon-approx, use 2n^(1/(1+epsilon)) permutations')
     parser.add_argument('--param', dest='param', nargs='?', default='../param',
             help='Specify path for LSH parameters')
+    parser.add_argument('--data', dest='data', nargs='?', default='../data',
+            help='Specify path for LSH processed input data')
     (options, args) = parser.parse_known_args()
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
     DATA_DIR = "/mnt/data/photoshopbattle_images"
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
+    DATA_DIR = os.path.join(PROJECT_DIR, options.data)
 
     if os.path.exists(PARAM_DIR):
         print "Found existing parameters, loading..."
@@ -132,20 +135,30 @@ def main():
         KMean = np.load(os.path.join(PARAM_DIR, 'KMean.npy'))
         klsh = KLSH(W=W, sample=sample, KMean0=KMean0, KMean=KMean)
         H = np.load(os.path.join(PARAM_DIR, 'H.npy'))
-        submissionList = pickle.load(open(os.path.join(PARAM_DIR, 'submissions')))
+        submissionList = pickle.load(open(os.path.join(DATA_DIR, 'submissions'), 'rb'))
     else:
         os.mkdir(PARAM_DIR)
-        X = []
-        submissionList = []
-        print "Existing parameters not found, computing input gist vectors..."
-        for dirName, _, fileList in os.walk(DATA_DIR):
-            if len(fileList) > 1:
-                submission = sorted(fileList)[0]
-                submissionList.append(submission.rsplit('.', 1)[0])
-                im = Image.open(os.path.join(dirName, submission))
-                X.append(leargist.color_gist(im))
-        pickle.dump(submissionList, open(os.path.join(PARAM_DIR, 'submissions')))
-        klsh = KLSH(np.array(X), p=options.p, t=options.t, b=options.b)
+        if os.path.exists(os.path.join(DATA_DIR, 'X.npy')):
+            print "Found input gist vectors, loading..."
+            X = np.load(os.path.join(DATA_DIR, 'X.npy'))
+            submissionList = pickle.load(open(os.path.join(DATA_DIR, 'submissions'), 'rb'))
+        else:
+            print "Existing input gist vectors not found, computing..."
+            X = []
+            submissionList = []
+            for dirName, _, fileList in os.walk(DATA_DIR):
+                if len(fileList) > 1:
+                    submission = sorted(fileList)[0]
+                    try:
+                        im = Image.open(os.path.join(dirName, submission))
+                        X.append(leargist.color_gist(im))
+                        submissionList.append(submission.rsplit('.', 1)[0])
+                    except:
+                        print("Unable to open image in {}".format(dirName))
+            X = np.array(X)
+            np.save(os.path.join(DATA_DIR, 'X.npy'), X)
+            pickle.dump(submissionList, open(os.path.join(DATA_DIR, 'submissions'), 'wb'))
+        klsh = KLSH(X, p=options.p, t=options.t, b=options.b)
         klsh.save_params(PARAM_DIR)
         H = klsh.compute_hash_table(np.array(X))
         np.save(os.path.join(PARAM_DIR, 'H.npy'), H)
