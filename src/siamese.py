@@ -292,7 +292,7 @@ def main():
     print("data_dir is {}".format(data_dir))
     print("test_dir is {}".format(test_dir))
     train_batch_generator = psb_util.batch_generator(data_dir=data_dir, batch_size=FLAGS.batch_size)
-    test_batch_generator = psb_util.batch_generator(data_dir=test_dir, batch_size=FLAGS.batch_size)
+    test_batch_generator = psb_util.batch_generator(data_dir=test_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = (3*5000+375)/FLAGS.batch_size
     validation_steps = 16#60
