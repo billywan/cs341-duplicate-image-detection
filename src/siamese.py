@@ -25,7 +25,7 @@ from keras.applications.vgg16 import preprocess_input
 from keras.models import Model
 from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda, GlobalAveragePooling2D, Dot
 from keras.utils import multi_gpu_model
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras import regularizers
 import keras.backend as K
 
@@ -57,7 +57,7 @@ def get_feat_weights(FLAGS):
     if FLAGS.base_model == "vgg16":
         weights = [0.5, 0.5]
     elif FLAGS.base_model == "resnet50":
-        weights = [0.1, 0.2, 0.2, 0.2, 0.3]
+        weights = [0.0, 0.1, 0.2, 0.0, 0.7]
     else:
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert np.sum(weights) == 1.0
@@ -284,6 +284,11 @@ def train(model, FLAGS):
                                                 verbose = True,
                                                 callbacks = [checkpointer])
 
+
+
+#val_loss: 0.4423 - val_acc: 0.8237 - val_mean_absolute_error: 0.2716  (epoch 12/20)
+#        weights = [0.1, 0.2, 0.2, 0.2, 0.3]
+
 def main():
     siamese_model = build_model(FLAGS)
     siamese_model = multi_gpu_model(siamese_model, gpus=4)
@@ -297,14 +302,17 @@ def main():
     test_batch_generator = psb_util.batch_generator(data_dir=test_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = (3*5000+375)/FLAGS.batch_size
-    validation_steps = 16#60
+    validation_steps = 21#60
 
+    reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5,
+                                    patience=4, min_lr=0.0001)
     loss_history = siamese_model.fit_generator(train_batch_generator,
                                                 validation_data = test_batch_generator,
                                                 steps_per_epoch = FLAGS.steps_per_epoch,
                                                 validation_steps = validation_steps,
                                                 epochs = FLAGS.num_epochs,
-                                                verbose = True)
+                                                verbose = True, 
+                                                callbacks=[reduce_lr])
 
 
 
