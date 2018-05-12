@@ -57,7 +57,7 @@ def get_feat_weights(FLAGS):
     if FLAGS.base_model == "vgg16":
         weights = [0.5, 0.5]
     elif FLAGS.base_model == "resnet50":
-        weights = [0.0, 0.1, 0.1, 0.2, 0.6]
+        weights = [0.1, 0.2, 0.2, 0.2, 0.3]
     else:
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert np.sum(weights) == 1.0
@@ -181,7 +181,9 @@ def build_model(FLAGS):
     else:
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert len(predictions_by_layer) == len(get_feat_layers(FLAGS))
-
+    
+    # for item in predictions_by_layer:
+    #     print item.shape
     # for i, score in enumerate(predictions_by_layer):
     #     predictions_by_layer[i] = K.print_tensor(score, message='score {} = '.format(i))
 
