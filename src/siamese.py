@@ -57,7 +57,7 @@ def get_feat_weights(FLAGS):
     if FLAGS.base_model == "vgg16":
         weights = [0.5, 0.5]
     elif FLAGS.base_model == "resnet50":
-        weights = [0.1, 0.1, 0.1, 0.2, 0.5]
+        weights = [0.0, 0.1, 0.1, 0.2, 0.6]
     else:
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert np.sum(weights) == 1.0
