@@ -287,9 +287,12 @@ def main():
     siamese_model = multi_gpu_model(siamese_model, gpus=4)
     #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
     compile_model(siamese_model, FLAGS)
-
-    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches_bin2", batch_size=FLAGS.batch_size)
-    test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches_bin2/test", batch_size=FLAGS.batch_size)
+    data_dir = "/mnt/data2/data_batches_bin2"
+    test_dir = os.path.join(data_dir, "test")
+    print("data_dir is {}".format(data_dir))
+    print("test_dir is {}".format(test_dir))
+    train_batch_generator = psb_util.batch_generator(data_dir=data_dir, batch_size=FLAGS.batch_size)
+    test_batch_generator = psb_util.batch_generator(data_dir=test_dir, batch_size=FLAGS.batch_size)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = (3*5000+375)/FLAGS.batch_size
     validation_steps = 16#60
