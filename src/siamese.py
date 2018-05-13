@@ -43,7 +43,6 @@ FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
 #infer how many dense layers used for prediction
 PREDICTION_DENSE_DIMS = [1024, 1024]
-drop_rate = 0.15
 
 def get_feat_layers(FLAGS):
     if FLAGS.base_model == "vgg16":
@@ -57,7 +56,7 @@ def get_feat_weights(FLAGS):
     if FLAGS.base_model == "vgg16":
         weights = [0.5, 0.5]
     elif FLAGS.base_model == "resnet50":
-        weights = [0.0, 0.1, 0.2, 0.0, 0.7]
+        weights = [0.0, 0.1, 0.2, 0.3, 0.4]
     else:
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert np.sum(weights) == 1.0
@@ -288,7 +287,7 @@ def train(model, FLAGS):
 
 #val_loss: 0.4423 - val_acc: 0.8237 - val_mean_absolute_error: 0.2716  (epoch 12/20)
 #        weights = [0.1, 0.2, 0.2, 0.2, 0.3]
-
+#        weights = [0.0, 0.1, 0.2, 0.0, 0.7]
 def main():
     siamese_model = build_model(FLAGS)
     siamese_model = multi_gpu_model(siamese_model, gpus=4)
