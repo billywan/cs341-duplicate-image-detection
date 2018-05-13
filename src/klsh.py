@@ -153,6 +153,8 @@ def main():
                         im = Image.open(os.path.join(dirName, submission))
                         X.append(leargist.color_gist(im))
                         submissionList.append(submission.rsplit('.', 1)[0])
+                        if len(submissionList) % 1000 == 0:
+                            print "computed gist vectors for {} images".format(len(submissionList))
                     except:
                         print("Unable to open image in {}".format(dirName))
             X = np.array(X)
