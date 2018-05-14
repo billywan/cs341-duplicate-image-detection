@@ -4,6 +4,8 @@ scipy
 Cython
 Pillow
 scikit-learn
+lshash
+bitarray
 tensorflow-gpu
 keras
 matplotlib
