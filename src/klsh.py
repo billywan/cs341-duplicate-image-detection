@@ -156,7 +156,7 @@ def main():
                         if len(submissionList) % 1000 == 0:
                             print "computed gist vectors for {} images".format(len(submissionList))
                     except:
-                        print("Unable to open image in {}".format(dirName))
+                        print "Unable to open image in {}".format(dirName)
             X = np.array(X)
             np.save(os.path.join(INPUT_DIR, 'X.npy'), X)
             pickle.dump(submissionList, open(os.path.join(INPUT_DIR, 'submissions'), 'wb'))
