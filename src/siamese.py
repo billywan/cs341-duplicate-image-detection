@@ -127,11 +127,17 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=Fa
     if l2_reg:
         kernel_regularizer = regularizers.l2(FLAGS.reg_rate)
     feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
+    
+    feat_tensor = Activation(activation)(feat_tensor)
+    
     #use bn before activation
+    print("Batch Norm {}".format(FLAGS.batch_norm))
     if FLAGS.batch_norm:
         print("Batch Norm True")
         feat_tensor = BatchNormalization()(feat_tensor)
-    feat_tensor = Activation(activation)(feat_tensor)
+    
+    #feat_tensor = Activation(activation)(feat_tensor)
+    
     if FLAGS.dropout != 0:
         print "dropout is {}".format(FLAGS.dropout)
         feat_tensor = Dropout(FLAGS.dropout)(feat_tensor)
@@ -325,8 +331,9 @@ def main():
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True, 
                                                 callbacks=[reduce_lr])
-
-
+    predictions = siamese_model.predict_generator(test_batch_generator, steps=21, max_queue_size=10, workers=4, use_multiprocessing=True, verbose=1)
+    print predictions.shape
+    print predictions[:10]
 
 
 

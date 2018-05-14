@@ -90,6 +90,7 @@ def main(unused_argv):
     elif FLAGS.mode == "eval":
         model = initialize_model(expect_exists=True)
         #model.predict()
+        #model.predict_generator()
 
 
 
