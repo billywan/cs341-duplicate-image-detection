@@ -149,14 +149,17 @@ def main():
             for dirName, _, fileList in os.walk(DATA_DIR):
                 if len(fileList) > 1:
                     submission = sorted(fileList)[0]
+                    fullPath = os.path.join(dirName, submission)
+                    print "computing gist vector for {}...".format(fullPath)
                     try:
-                        im = Image.open(os.path.join(dirName, submission))
-                        X.append(leargist.color_gist(im))
+                        im = Image.open(fullPath)
+                        X.append(leargist.color_gist(im, orientations=(4,4,2)))
                         submissionList.append(submission.rsplit('.', 1)[0])
-                        if len(submissionList) % 1000 == 0:
+                        if len(submissionList) % 500 == 0:
                             print "computed gist vectors for {} images".format(len(submissionList))
+                            print "=" * 50
                     except:
-                        print "Unable to open image in {}".format(dirName)
+                        print "Unable to open image {}".format(fullPath)
             X = np.array(X)
             np.save(os.path.join(INPUT_DIR, 'X.npy'), X)
             pickle.dump(submissionList, open(os.path.join(INPUT_DIR, 'submissions'), 'wb'))
