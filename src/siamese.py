@@ -42,12 +42,13 @@ RESNET_MODEL = keras.applications.resnet50.ResNet50(include_top=True, weights='i
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
 #infer how many dense layers used for prediction
-PREDICTION_DENSE_DIMS = [1024, 1024]
+PREDICTION_DENSE_DIMS = [1024, 1024, 1024] #[1024, 1024]
 
 def get_feat_layers(FLAGS):
     if FLAGS.base_model == "vgg16":
         return ['block4_pool', 'block5_pool']
     elif FLAGS.base_model == "resnet50":
+        #(None, 55, 55, 64), (None, 55, 55, 256), (None, 28, 28, 512), (None, 14, 14, 1024), (None, 7, 7, 2048)
         return ['max_pooling2d_1', 'activation_10', 'activation_22', 'activation_40', 'activation_49']
     else:
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
@@ -61,6 +62,16 @@ def get_feat_weights(FLAGS):
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert np.sum(weights) == 1.0
     return weights
+
+
+
+#val_loss: 0.4423 - val_acc: 0.8237 - val_mean_absolute_error: 0.2716  (epoch 12/20)
+#        weights = [0.1, 0.2, 0.2, 0.2, 0.3]
+#loss: 0.1325 - acc: 0.9639 - mean_absolute_error: 0.0990 - val_loss: 0.4953 - val_acc: 0.8235 - val_mean_absolute_error: 0.2106
+# (epoch 40/40)     dropout=0.5       weights = [0.0, 0.1, 0.2, 0.0, 0.7]
+
+
+
 
 # def get_resnet_feat_layers():
 #     #channel dims: 64, 256, 512, 1024, 2048
@@ -285,9 +296,7 @@ def train(model, FLAGS):
 
 
 
-#val_loss: 0.4423 - val_acc: 0.8237 - val_mean_absolute_error: 0.2716  (epoch 12/20)
-#        weights = [0.1, 0.2, 0.2, 0.2, 0.3]
-#        weights = [0.0, 0.1, 0.2, 0.0, 0.7]
+
 def main():
     siamese_model = build_model(FLAGS)
     siamese_model = multi_gpu_model(siamese_model, gpus=4)
