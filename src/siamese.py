@@ -42,7 +42,7 @@ RESNET_MODEL = keras.applications.resnet50.ResNet50(include_top=True, weights='i
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
 #infer how many dense layers used for prediction
-PREDICTION_DENSE_DIMS = [1024, 1024, 1024] #[1024, 1024]
+PREDICTION_DENSE_DIMS = [1024, 1024] #[1024, 1024]
 
 def get_feat_layers(FLAGS):
     if FLAGS.base_model == "vgg16":
@@ -117,18 +117,19 @@ def get_feature_model(FLAGS):
 
 
 
-def flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True):
+def flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu'):
     feat_tensor = Flatten()(feat_tensor)
-    feat_tensor = dense_with_bn(feat_tensor, FLAGS, out_dim, activation, batch_norm)
+    feat_tensor = dense_with_bn(feat_tensor, FLAGS, out_dim, activation)
     return feat_tensor
 
-def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True, l2_reg=False):
+def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=False):
     kernel_regularizer=None
     if l2_reg:
         kernel_regularizer = regularizers.l2(FLAGS.reg_rate)
     feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
     #use bn before activation
-    if batch_norm:
+    if FLAGS.batch_norm:
+        print("Batch Norm True")
         feat_tensor = BatchNormalization()(feat_tensor)
     feat_tensor = Activation(activation)(feat_tensor)
     if FLAGS.dropout != 0:
@@ -164,11 +165,11 @@ def get_loss_function(FLAGS):
     return scaled_mse_loss
 
 
-def resnet_flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu', batch_norm=True):
+def resnet_flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu'):
     feat_tensor = GlobalAveragePooling2D()(feat_tensor)
     #feat_tensor = Flatten()(feat_tensor)
     print feat_tensor.shape
-    feat_tensor = dense_with_bn(feat_tensor, FLAGS, out_dim, activation, batch_norm)
+    feat_tensor = dense_with_bn(feat_tensor, FLAGS, out_dim, activation)
     return feat_tensor
 
 def build_model(FLAGS):
@@ -183,11 +184,11 @@ def build_model(FLAGS):
     assert len(tar_feats) == len(get_feat_layers(FLAGS))
     feat_pairs_by_layer = zip(src_feats, tar_feats)
     if FLAGS.base_model == "vgg16":
-        feat_pairs_dense = [(flatten_dense(src_feat, FLAGS, 1024, 'relu', True), flatten_dense(tar_feat, FLAGS, 1024, 'relu', True))\
+        feat_pairs_dense = [(flatten_dense(src_feat, FLAGS, 1024, 'relu'), flatten_dense(tar_feat, FLAGS, 1024, 'relu'))\
                             for (src_feat, tar_feat) in feat_pairs_by_layer]
         predictions_by_layer = [get_prediction(src_feat, tar_feat, FLAGS, str(i)) for i, (src_feat, tar_feat) in enumerate(feat_pairs_dense)]
     elif FLAGS.base_model == "resnet50":
-        feat_pairs_dense = [(resnet_flatten_dense(src_feat, FLAGS, 1024, 'relu', True), resnet_flatten_dense(tar_feat, FLAGS, 1024, 'relu', True))\
+        feat_pairs_dense = [(resnet_flatten_dense(src_feat, FLAGS, 1024, 'relu'), resnet_flatten_dense(tar_feat, FLAGS, 1024, 'relu'))\
                             for (src_feat, tar_feat) in feat_pairs_by_layer]
         predictions_by_layer = [get_prediction(src_feat, tar_feat, FLAGS, str(i)) for i, (src_feat, tar_feat) in enumerate(feat_pairs_dense)]
     else:
@@ -246,6 +247,7 @@ tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped o
 tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
 tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
 tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
+tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
 
 
 FLAGS = tf.app.flags.FLAGS
