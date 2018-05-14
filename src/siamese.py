@@ -1,7 +1,7 @@
 #from __future__ import print_function
 
 #miscellaneous imports
-import os, sys
+import os, sys, time
 import random
 import pickle
 import numpy as np
@@ -128,7 +128,7 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=Fa
         kernel_regularizer = regularizers.l2(FLAGS.reg_rate)
     feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
     
-    feat_tensor = Activation(activation)(feat_tensor)
+    #feat_tensor = Activation(activation)(feat_tensor)
 
     #use bn before activation, just as resnet
     print("Batch Norm {}".format(FLAGS.batch_norm))
@@ -136,7 +136,7 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=Fa
         print("Batch Norm True")
         feat_tensor = BatchNormalization()(feat_tensor)
     
-    #feat_tensor = Activation(activation)(feat_tensor)
+    feat_tensor = Activation(activation)(feat_tensor)
     
     if FLAGS.dropout != 0:
         print "dropout is {}".format(FLAGS.dropout)
@@ -312,7 +312,7 @@ def main():
     siamese_model = multi_gpu_model(siamese_model, gpus=4)
     #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
     compile_model(siamese_model, FLAGS)
-    data_dir = "/mnt/data2/data_batches_bin2"
+    data_dir = "/mnt/data2/data_batches_bin3"
     test_dir = os.path.join(data_dir, "test")
     print("data_dir is {}".format(data_dir))
     print("test_dir is {}".format(test_dir))
@@ -331,7 +331,10 @@ def main():
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True, 
                                                 callbacks=[reduce_lr])
+    t0 = time.time()
     predictions = siamese_model.predict_generator(test_batch_generator, steps=21, max_queue_size=10, workers=4, use_multiprocessing=True, verbose=1)
+    t1 = time.time()
+    print("time taken {}".format(t1-t0))
     print predictions.shape
     print predictions[:10]
 
