@@ -129,8 +129,8 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=Fa
     feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
     
     feat_tensor = Activation(activation)(feat_tensor)
-    
-    #use bn before activation
+
+    #use bn before activation, just as resnet
     print("Batch Norm {}".format(FLAGS.batch_norm))
     if FLAGS.batch_norm:
         print("Batch Norm True")
