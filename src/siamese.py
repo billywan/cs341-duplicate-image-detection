@@ -67,10 +67,12 @@ def get_feat_weights(FLAGS):
 
 #val_loss: 0.4423 - val_acc: 0.8237 - val_mean_absolute_error: 0.2716  (epoch 12/20)
 #        weights = [0.1, 0.2, 0.2, 0.2, 0.3]
+
 #loss: 0.1325 - acc: 0.9639 - mean_absolute_error: 0.0990 - val_loss: 0.4953 - val_acc: 0.8235 - val_mean_absolute_error: 0.2106
 # (epoch 40/40)     dropout=0.5       weights = [0.0, 0.1, 0.2, 0.0, 0.7]
 
-
+#weights = [0.0, 0.1, 0.2, 0.3, 0.4]
+#loss: 0.1757 - acc: 0.9410 - mean_absolute_error: 0.1332 - val_loss: 0.4796 - val_acc: 0.8323 - val_mean_absolute_error: 0.2183
 
 
 # def get_resnet_feat_layers():
@@ -276,7 +278,7 @@ def train(model, FLAGS):
         siamese_model = model
     #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
     compile_model(siamese_model, FLAGS)
-    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size)
+    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size, shuffle_files=False)
     test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = 4*5000/FLAGS.batch_size
@@ -306,7 +308,7 @@ def main():
     test_dir = os.path.join(data_dir, "test")
     print("data_dir is {}".format(data_dir))
     print("test_dir is {}".format(test_dir))
-    train_batch_generator = psb_util.batch_generator(data_dir=data_dir, batch_size=FLAGS.batch_size)
+    train_batch_generator = psb_util.batch_generator(data_dir=data_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
     test_batch_generator = psb_util.batch_generator(data_dir=test_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = (3*5000+375)/FLAGS.batch_size
