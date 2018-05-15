@@ -46,7 +46,7 @@ def unison_shuffled_data(a, b, c):
     return a[p], b[p], c[p]
 
 def batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches", batch_size=50, shuffle_files=True):
-    data_files = [file for file in sorted(os.listdir(data_dir)) if file.startswith('data_batch_')]
+    data_files = [file for file in sorted(os.listdir(data_dir)) if 'data_batch_' in file]
     if shuffle_files:
         random.shuffle(data_files)
     while True:
