@@ -1,11 +1,14 @@
 '''
 Script to perform Kernelized Locality Sensitive Hashing
+Assumes input and query gist vectors have already been computed
 Some code based on https://github.com/jakevdp/klsh and https://github.com/emchristiansen/CharikarLSH
 '''
 
 import os
+import sys
 import argparse
 import random
+
 import numpy as np
 import leargist
 import pickle
@@ -13,6 +16,7 @@ from PIL import Image
 from sklearn.metrics.pairwise import rbf_kernel
 
 import util
+
 
 def raise_to_neg_half(X):
     '''
@@ -143,46 +147,25 @@ def main():
             X = np.load(os.path.join(INPUT_DIR, 'X.npy'))
             submissionList = pickle.load(open(os.path.join(INPUT_DIR, 'submissions'), 'rb'))
         else:
-            print "Existing input gist vectors not found, computing..."
-            X = []
-            submissionList = []
-            for dirName, _, fileList in os.walk(DATA_DIR):
-                if len(fileList) > 1:
-                    submission = sorted(fileList)[0]
-                    fullPath = os.path.join(dirName, submission)
-                    print "computing gist vector for {}...".format(fullPath)
-                    try:
-                        im = Image.open(fullPath)
-                        X.append(leargist.color_gist(im, orientations=(4,4,2)))
-                        submissionList.append(submission.rsplit('.', 1)[0])
-                        if len(submissionList) % 500 == 0:
-                            print "computed gist vectors for {} images".format(len(submissionList))
-                            print "=" * 50
-                    except:
-                        print "Unable to open image {}".format(fullPath)
-            X = np.array(X)
-            np.save(os.path.join(INPUT_DIR, 'X.npy'), X)
-            pickle.dump(submissionList, open(os.path.join(INPUT_DIR, 'submissions'), 'wb'))
+            print "Existing input gist vectors not found, please compute them first"
+            sys.exit()
+
         klsh = KLSH(X, p=options.p, t=options.t, b=options.b)
         klsh.save_params(PARAM_DIR)
         H = klsh.compute_hash_table(np.array(X))
         np.save(os.path.join(PARAM_DIR, 'H.npy'), H)
 
-    # print H[22]
-    Q = []
-    queryList = []
-    print "Randomly pick 100 query images..."
-    dirAndFiles = random.sample([(dirName, fileList) for dirName, _, fileList in os.walk(DATA_DIR) if len(fileList) > 1], 100)
-    for dir, files in dirAndFiles:
-        query = random.choice(sorted(files)[1:])
-        queryList.append(query)
-        im = Image.open(os.path.join(dir, query))
-        Q.append(leargist.color_gist(im))
+    if os.path.exists(os.path.join(INPUT_DIR, 'Q.npy')):
+        print "Found query gist vectors, loading..."
+        Q = np.load(os.path.join(INPUT_DIR, 'Q.npy')).tolist()
+        queryList = pickle.load(open(os.path.join(INPUT_DIR, 'queries'), 'rb'))
+    else:
+        print "Existing query gist vectors not found, please compute them first"
+        sys.exit()
 
     print "Hashing query gist vectors..."
     # [q, b]
     H_Q = klsh.compute_hash_table(np.array(Q))
-    # print H_Q[0]
     # nearest neighbor search
     print "Permuting hash table..."
     permutations = util.generate_permutations(H, options.np)
@@ -192,7 +175,7 @@ def main():
     for i, candidate in enumerate(candidates):
         print "Found {} candidates for query {}: ".format(len(candidate), i)
         try:
-            idx = submissionList.index(queryList[i].rsplit('_', 1))
+            idx = submissionList.index(queryList[i].rsplit('_', 1)[0])
             if idx in candidate:
                 positive_count += 1
         except ValueError:
