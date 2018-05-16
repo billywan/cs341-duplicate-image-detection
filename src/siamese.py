@@ -316,11 +316,11 @@ def main():
     test_dir = os.path.join(data_dir, "test")
     print("data_dir is {}".format(data_dir))
     print("test_dir is {}".format(test_dir))
-    train_batch_generator = psb_util.batch_generator(data_dir=data_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
+    train_batch_generator = psb_util.batch_generator(data_dir=data_dir, batch_size=FLAGS.batch_size, shuffle_files=True)
     test_batch_generator = psb_util.batch_generator(data_dir=test_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = (3*5000+375)/FLAGS.batch_size
-    validation_steps = 50#21#60
+    validation_steps = 43#21#60
 
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5,
                                     patience=4, min_lr=0.0001)
