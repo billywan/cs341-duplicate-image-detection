@@ -330,9 +330,16 @@ def main():
                                                 validation_steps = validation_steps,
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True, 
-                                                callbacks=[reduce_lr])
+                                                callbacks=[reduce_lr], 
+                                                workers=4, 
+                                                use_multiprocessing=True)
     t0 = time.time()
-    predictions = siamese_model.predict_generator(test_batch_generator, steps=21, max_queue_size=10, workers=4, use_multiprocessing=True, verbose=1)
+    predictions = siamese_model.predict_generator(test_batch_generator, 
+                                                    steps=21, 
+                                                    max_queue_size=10, 
+                                                    workers=4, 
+                                                    use_multiprocessing=True, 
+                                                    verbose=1)
     t1 = time.time()
     print("time taken {}".format(t1-t0))
     print predictions.shape
