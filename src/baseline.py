@@ -23,7 +23,6 @@ def main():
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
     INPUT_DIR = os.path.join(PROJECT_DIR, options.input)
-    DATA_DIR = "/mnt/data/photoshopbattle_images"
 
     if os.path.exists(os.path.join(INPUT_DIR, 'X.npy')):
         print "Found input gist vectors, loading..."

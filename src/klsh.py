@@ -127,7 +127,6 @@ def main():
     (options, args) = parser.parse_known_args()
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-    DATA_DIR = "/mnt/data/photoshopbattle_images"
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
     INPUT_DIR = os.path.join(PROJECT_DIR, options.input)
 
