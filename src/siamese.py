@@ -128,6 +128,10 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=Fa
         kernel_regularizer = regularizers.l2(FLAGS.reg_rate)
     feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
     
+    if FLAGS.dropout != 0:
+        print "dropout is {}".format(FLAGS.dropout)
+        feat_tensor = Dropout(FLAGS.dropout)(feat_tensor)
+    
     #feat_tensor = Activation(activation)(feat_tensor)
 
     #use bn before activation, just as resnet
@@ -138,9 +142,9 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=Fa
     
     feat_tensor = Activation(activation)(feat_tensor)
     
-    if FLAGS.dropout != 0:
-        print "dropout is {}".format(FLAGS.dropout)
-        feat_tensor = Dropout(FLAGS.dropout)(feat_tensor)
+    # if FLAGS.dropout != 0:
+    #     print "dropout is {}".format(FLAGS.dropout)
+    #     feat_tensor = Dropout(FLAGS.dropout)(feat_tensor)
     return feat_tensor
 
 def get_prediction(src_feat, tar_feat, FLAGS, name="", dense_dims=PREDICTION_DENSE_DIMS):
