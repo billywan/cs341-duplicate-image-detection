@@ -13,7 +13,7 @@ from PIL import Image
 
 def main():
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-    DATA_DIR = "/mnt/data/photoshopbattle_images"
+    DATA_DIR = "/mnt/data/photoshopbattle_images_preprocessed"
     INPUT_DIR = os.path.join(PROJECT_DIR, '../data')
 
     if os.path.exists(os.path.join(INPUT_DIR, 'X.npy')):
