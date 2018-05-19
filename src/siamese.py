@@ -75,6 +75,11 @@ def get_feat_weights(FLAGS):
 #loss: 0.1757 - acc: 0.9410 - mean_absolute_error: 0.1332 - val_loss: 0.4796 - val_acc: 0.8323 - val_mean_absolute_error: 0.2183
 
 
+
+#loss: 0.0720 - acc: 0.9784 - mean_absolute_error: 0.0560 
+#- val_loss: 0.3495 - val_acc: 0.8894 - val_mean_absolute_error: 0.1477
+#Epoch 38/40
+
 # def get_resnet_feat_layers():
 #     #channel dims: 64, 256, 512, 1024, 2048
 #     layers = ['max_pooling2d_1', 'activation_10', 'activation_22', 'activation_40', 'activation_49']
@@ -281,7 +286,7 @@ FLAGS = tf.app.flags.FLAGS
 
 def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
-    model.compile(optimizer='adam', loss = 'binary_crossentropy', metrics = ['accuracy', 'mae'])
+    model.compile(optimizer='adam', loss = loss_func, metrics = ['accuracy', 'mae'])
 
 def train(model, FLAGS):
     if FLAGS.gpu > 1: #utilize multiple gpus
