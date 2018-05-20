@@ -34,7 +34,7 @@ def lookup(permutations, query):
     '''
     numPermutations = len(permutations)
     candidates = []
-    for q in query:
+    for query_num, q in enumerate(query):
         uniqueIndices = set()
         for permutation in permutations:
             permutedQuery = [q[i] for i in permutation.permutedIdx]
@@ -42,6 +42,8 @@ def lookup(permutations, query):
                 idx = permutation.sortedData.index(permutedQuery)
                 uniqueIndices.update(permutation.sortedIdx[max(idx - 2*numPermutations, 0):min(idx + 2*numPermutations, len(permutation.sortedIdx))])
             except ValueError:
-                print "query not found in hash table!!!"
+                print "query {} not found in hash table!!!".format(query_num)
+                break
+
         candidates.append(list(uniqueIndices))
     return candidates
