@@ -179,7 +179,7 @@ def main():
                 positive_count += 1
         except ValueError:
             print "Unexpected error: query's original not found in submission list"
-    print "Original found in candidates for {}%% of images".format(1.0 * positive_count)
+    print "Original found in candidates for {}% of images".format(1.0 * positive_count)
 
 if __name__ == "__main__":
     main()
