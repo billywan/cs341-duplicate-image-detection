@@ -165,22 +165,36 @@ def main():
     print "Hashing query gist vectors..."
     # [q, b]
     H_Q = klsh.compute_hash_table(np.array(Q))
+
     # nearest neighbor search
     numBands = options.b / options.r
     print "Hashing database LSH bits into buckets..."
     bucketsOfBands = util.generate_buckets(H, numBands)
     print "Hashing query LSH bits into buckets and generating candidates..."
     candidates = util.generate_candidates(bucketsOfBands, H_Q, numBands)
+
+    # statistics
     positive_count = 0
+    success_count = 0
+    numCandidates = []
     for i, candidate in enumerate(candidates):
-        print "Found {} candidates for query {}: ".format(len(candidate), i), candidate
-        try:
-            idx = submissionList.index(queries[i].rsplit('_', 1)[0])
-            if idx in candidate:
-                positive_count += 1
-        except ValueError:
-            print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queries[i])
-    print "Original found in candidates for {}% of images".format(1.0 * positive_count)
+        numCandidate = len(candidate)
+        queryName = queries[i]
+        print "Found {} candidates for query {}: {}".format(numCandidate, i, queryName)
+        if numCandidate > 0:
+            positive_count += 1
+            numCandidates.append(numCandidate)
+            try:
+                idx = submissionList.index(queryName.rsplit('_', 1)[0])
+                if idx in candidate:
+                    success_count += 1
+            except ValueError:
+                print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queryName)
+    print "=" * 50
+    # assume 100 sample queries
+    print "{}% of images have candidates".format(1.0 * positive_count)
+    print "Average number of candidates {}".format(np.mean(numCandidates))
+    print "Original found in candidates for {}% of images".format(1.0 * success_count)
 
 if __name__ == "__main__":
     main()

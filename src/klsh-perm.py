@@ -157,7 +157,7 @@ def main():
     if os.path.exists(os.path.join(INPUT_DIR, 'Q.npy')):
         print "Found query gist vectors, loading..."
         Q = np.load(os.path.join(INPUT_DIR, 'Q.npy')).tolist()
-        queryList = pickle.load(open(os.path.join(INPUT_DIR, 'queries'), 'rb'))
+        queries = pickle.load(open(os.path.join(INPUT_DIR, 'queries'), 'rb'))
     else:
         print "Existing query gist vectors not found, please compute them first"
         sys.exit()
@@ -170,16 +170,28 @@ def main():
     permutations = util.generate_permutations(H, options.np)
     print "Searching for query and generating candidates..."
     candidates = util.lookup(permutations, H_Q)
+    # statistics
     positive_count = 0
+    success_count = 0
+    numCandidates = []
     for i, candidate in enumerate(candidates):
-        print "Found {} candidates for query {}: ".format(len(candidate), i)
-        try:
-            idx = submissionList.index(queryList[i].rsplit('_', 1)[0])
-            if idx in candidate:
-                positive_count += 1
-        except ValueError:
-            print "Unexpected error: query's original not found in submission list"
-    print "Original found in candidates for {}% of images".format(1.0 * positive_count)
+        numCandidate = len(candidate)
+        queryName = queries[i]
+        print "Found {} candidates for query {}: {}".format(numCandidate, i, queryName)
+        if numCandidate > 0:
+            positive_count += 1
+            numCandidates.append(numCandidate)
+            try:
+                idx = submissionList.index(queryName.rsplit('_', 1)[0])
+                if idx in candidate:
+                    success_count += 1
+            except ValueError:
+                print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queryName)
+    print "=" * 50
+    # assume 100 sample queries
+    print "{}% of images have candidates".format(1.0 * positive_count)
+    print "Average number of candidates {}".format(np.mean(numCandidates))
+    print "Original found in candidates for {}% of images".format(1.0 * success_count)
 
 if __name__ == "__main__":
     main()
