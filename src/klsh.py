@@ -185,6 +185,7 @@ def main():
             try:
                 idx = submissionList.index(queryName.rsplit('_', 1)[0])
                 if idx in candidate:
+                    print "Original found in candidates for query {}: {}".format(i, queryName)
                     success_count += 1
             except ValueError:
                 print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queryName)
