@@ -1,6 +1,47 @@
 from operator import itemgetter
 import numpy as np
 
+def generate_buckets(bitVectors, numBands):
+    '''
+    Hash each band of numColsPerBand rows into buckets (dictionaries)
+    Return a list of dictionaries, one per band
+    '''
+    bands = np.hsplit(bitVectors, numBands)
+    return [hash_band(band) for band in bands]
+
+def hash_band(band):
+    '''
+    Hash a band of shape [n, numColsPerBand] into buckets.
+    Returns a dictionary of 'str representation of numpy array' -> set of indices
+    '''
+    buckets = {}
+    for i, row in enumerate(band):
+        key = str(row)
+        if key in buckets:
+            buckets[key].add(i)
+        else:
+            buckets[key] = set([i])
+    return buckets
+
+def generate_candidates(bucketsOfBands, queryBitVectors, numBands):
+    '''
+    For each query hash bits, hash each band into a bucket and the indices in
+    the bucket becomes candidates for that query
+    '''
+    candidatesForQueries = []
+    for query_num, queryBitVector in enumerate(queryBitVectors):
+        bands = np.hsplit(queryBitVector, numBands)
+        candidates = set()
+        for band, buckets in zip(bands, bucketsOfBands):
+            key = str(band)
+            if key in buckets:
+                candidates.update(buckets[key])
+        if not candidates:
+            print "No candidate found for query {}".formt(query_num)
+        candidatesForQueries.append(list(candidates))
+    return candidatesForQueries
+
+
 class Permutation():
     def __init__(self, sortedData, sortedIdx, permutedIdx):
         # Python list

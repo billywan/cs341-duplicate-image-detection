@@ -1,7 +1,7 @@
 '''
-Script to perform Kernelized Locality Sensitive Hashing
+Script to perform Kernelized Locality Sensitive Hashing with the "bands" technique
 Assumes input and query gist vectors have already been computed
-Some code based on https://github.com/jakevdp/klsh and https://github.com/emchristiansen/CharikarLSH
+Some code based on https://github.com/jakevdp/klsh
 '''
 
 import os
@@ -116,10 +116,10 @@ def main():
             help='amount of data to use when approximating the data distribution in the kernel subspace (p in paper).')
     parser.add_argument('-t', dest='t', nargs='?', default=30, type=int,
             help='number of random objects to use when choosing kernel-space hyperplanes (t in paper)')
-    parser.add_argument('-b', dest='b', nargs='?', default=300, type=int,
+    parser.add_argument('-b', dest='b', nargs='?', default=50, type=int,
             help='number of hash bits (number of hash function to create, b in paper)')
-    parser.add_argument('-np', dest='np', nargs='?', default=250, type=int,
-            help='number of permutations in nearest neighbor search. For epsilon-approx, use 2n^(1/(1+epsilon)) permutations')
+    parser.add_argument('-r', dest='r', nargs='?', default=10, type=int,
+            help='number of columns (rows as described in 246) per band, shoud divide b evenly')
     parser.add_argument('--param', dest='param', nargs='?', default='../param',
             help='Specify path for LSH parameters')
     parser.add_argument('--input', dest='input', nargs='?', default='../data',
@@ -157,7 +157,7 @@ def main():
     if os.path.exists(os.path.join(INPUT_DIR, 'Q.npy')):
         print "Found query gist vectors, loading..."
         Q = np.load(os.path.join(INPUT_DIR, 'Q.npy')).tolist()
-        queryList = pickle.load(open(os.path.join(INPUT_DIR, 'queries'), 'rb'))
+        queries = pickle.load(open(os.path.join(INPUT_DIR, 'queries'), 'rb'))
     else:
         print "Existing query gist vectors not found, please compute them first"
         sys.exit()
@@ -166,19 +166,20 @@ def main():
     # [q, b]
     H_Q = klsh.compute_hash_table(np.array(Q))
     # nearest neighbor search
-    print "Permuting hash table..."
-    permutations = util.generate_permutations(H, options.np)
-    print "Searching for query and generating candidates..."
-    candidates = util.lookup(permutations, H_Q)
+    numBands = options.b / options.r
+    print "Hashing database LSH bits into buckets..."
+    bucketsOfBands = util.generate_buckets(H, numBands)
+    print "Hashing query LSH bits into buckets and generating candidates..."
+    candidates = util.generate_candidates(bucketsOfBands, H_Q, numBands)
     positive_count = 0
     for i, candidate in enumerate(candidates):
         print "Found {} candidates for query {}: ".format(len(candidate), i)
         try:
-            idx = submissionList.index(queryList[i].rsplit('_', 1)[0])
+            idx = submissionList.index(queries[i].rsplit('_', 1)[0])
             if idx in candidate:
                 positive_count += 1
         except ValueError:
-            print "Unexpected error: query's original not found in submission list"
+            print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queries[i])
     print "Original found in candidates for {}% of images".format(1.0 * positive_count)
 
 if __name__ == "__main__":
