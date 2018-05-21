@@ -10,9 +10,7 @@ import argparse
 import random
 
 import numpy as np
-import leargist
 import pickle
-from PIL import Image
 from sklearn.metrics.pairwise import rbf_kernel
 
 import util
@@ -180,7 +178,7 @@ def main():
     for i, candidate in enumerate(candidates):
         numCandidate = len(candidate)
         queryName = queries[i]
-        print "Found {} candidates for query {}: {}".format(numCandidate, i, queryName)
+        print "Found {} candidates for query {}: {}, e.g. {}".format(numCandidate, i, queryName, random.sample(candidate, 5))
         if numCandidate > 0:
             positive_count += 1
             numCandidates.append(numCandidate)
