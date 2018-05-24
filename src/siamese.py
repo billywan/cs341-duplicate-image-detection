@@ -180,10 +180,16 @@ def aggregate_predictions(FLAGS, predictions):
         weights = get_feat_weights(FLAGS)
         # k_weights = [K.variable(w) for w in weights]
         # k_predictions = [K.variable(p) for p in predictions_by_layer]
+
+        # k_weights = K.variable(weights)
+        # k_predictions = concatenate(predictions_by_layer, axis=0) 
+        # scores = Multiply()([k_weights, k_predictions])
+        # final_score = K.sum(scores)
+        assert len(a) == len(weights)
         k_weights = K.variable(weights)
-        k_predictions = concatenate(predictions_by_layer, axis=0) 
-        scores = Multiply()([k_weights, k_predictions])
-        final_score = K.sum(scores)
+        final_score = k_weights[0]*predictions_by_layer[0]
+        for i in range(1, len(predictions_by_layer)):
+            final_score += k_weights[i]*predictions_by_layer[i]
         return final_score
 
     # def test(a, weights):
