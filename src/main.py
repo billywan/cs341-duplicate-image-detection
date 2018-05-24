@@ -6,7 +6,7 @@ import io
 import json
 import sys
 import logging
-
+import argparse
 import tensorflow as tf
 import keras
 from keras.models import load_model
@@ -19,18 +19,23 @@ MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
 MODEL_CHECKPOINT_NAME = 'model.hdf5'
 
-# High-level options
-tf.app.flags.DEFINE_integer("gpu", 4, "How many GPU to use, if you have multiple.")
-tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval")
-tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
-tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
-tf.app.flags.DEFINE_integer("steps_per_epoch", 200, "batch_size")
-tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
 
-# Hyperparameters
-tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
-tf.app.flags.DEFINE_float("dropout", 0.15, "Fraction of units randomly dropped on dense layers.")
-tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
+# ##############################################################################################################
+# # High-level options
+# tf.app.flags.DEFINE_integer("gpu", 4, "How many GPU to use, if you have multiple.")
+# tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval")
+# tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
+# tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
+# tf.app.flags.DEFINE_integer("steps_per_epoch", 200, "batch_size")
+# tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
+
+# # Hyperparameters
+# tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
+# tf.app.flags.DEFINE_float("dropout", 0.15, "Fraction of units randomly dropped on dense layers.")
+# tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
+# ########################################################################################################################
+
+
 
 # # How often to print, save, eval
 # tf.app.flags.DEFINE_integer("print_every", 1, "How many iterations to do per print.")
@@ -53,21 +58,82 @@ tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
 #tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
 #tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
 #tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
-tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
-tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
-tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
-tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
 
+# ####################################################################################################################################
+# tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
+# tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
+# tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
+# tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
+# ####################################################################################################################################
 
 DATA_DIR = "/mnt/data2/data_batches_01_12"
 TEST_DATA_DIR = os.path.join(DATA_DIR, "test")
 EVAL_DATA_DIR = os.path.join(DATA_DIR, "eval")
-tf.app.flags.DEFINE_string("train_data_dir", DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
-tf.app.flags.DEFINE_string("test_data_dir", TEST_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
-tf.app.flags.DEFINE_string("eval_data_dir", EVAL_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
 
 
-FLAGS = tf.app.flags.FLAGS
+####################################################################################################################################
+# tf.app.flags.DEFINE_string("train_data_dir", DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+# tf.app.flags.DEFINE_string("test_data_dir", TEST_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+# tf.app.flags.DEFINE_string("eval_data_dir", EVAL_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+####################################################################################################################################
+
+
+
+def get_flags():
+
+    parser = argparse.ArgumentParser(description='Siamese Neural Network')
+
+
+
+
+
+    parser.add_argument('--gpu', dest='gpu', nargs='?', default=4, type=int,
+            help='How many GPU to use, if you have multiple.')
+    parser.add_argument('--mode', dest='mode', nargs='?', default='train', type=str,
+            help='Available modes: train / eval')
+    parser.add_argument('--experiment_name', dest='experiment_name', nargs='?', default='', type=str,
+            help='Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment')
+    parser.add_argument('--num_epochs', dest='num_epochs', nargs='?', default=0, type=int,
+            help='Number of epochs to train. 0 means train indefinitely')
+    parser.add_argument('--steps_per_epoch', dest='steps_per_epoch', nargs='?', default=200, type=int,
+            help='steps_per_epoch')
+    parser.add_argument('--validation_steps', dest='validation_steps', nargs='?', default=20, type=int,
+            help='validation_steps')
+
+    parser.add_argument('--learning_rate', dest='learning_rate', nargs='?', default=0.01, type=float,
+            help='learning_rate')
+    parser.add_argument('--dropout', dest='dropout', nargs='?', default=0.25, type=float,
+            help='dropout')
+    parser.add_argument('--batch_size', dest='batch_size', nargs='?', default=100, type=int,
+            help='batch_size')
+
+
+    parser.add_argument('--reg_rate', dest='reg_rate', nargs='?', default=0.001, type=float,
+            help='reg_rate')
+    parser.add_argument('--loss_scale', dest='loss_scale', nargs='?', default=20, type=int,
+            help='loss_scale')
+    parser.add_argument('--base_model', dest='base_model', nargs='?', default='resnet50', type=str,
+            help='base_model')
+    parser.add_argument('--batch_norm', dest='batch_norm', nargs='?', default=True, type=bool,
+            help='batch_norm')
+
+
+    parser.add_argument('--train_data_dir', dest='train_data_dir', nargs='?', default=DATA_DIR, type=str,
+            help='train_data_dir')
+    parser.add_argument('--test_data_dir', dest='test_data_dir', nargs='?', default=TEST_DATA_DIR, type=str,
+            help='test_data_dir')
+    parser.add_argument('--eval_data_dir', dest='eval_data_dir', nargs='?', default=EVAL_DATA_DIR, type=str,
+            help='eval_data_dir')
+
+    FLAGS = parser.parse_args()
+
+
+FLAGS = get_flags():
+
+# #############################################################################
+# FLAGS = tf.app.flags.FLAGS
+# #############################################################################
+
 
 def initialize_model(expect_exists=False):
     # Setup experiment dir
@@ -97,6 +163,13 @@ def initialize_model(expect_exists=False):
 
 
 def main(unused_argv):
+
+
+
+
+
+
+
     # Print an error message if you've entered flags incorrectly
     if len(unused_argv) != 1:
         raise Exception("There is a problem with how you entered flags: %s" % unused_argv)
