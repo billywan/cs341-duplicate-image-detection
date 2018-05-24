@@ -28,6 +28,7 @@ from keras.utils import multi_gpu_model
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras import regularizers
 import keras.backend as K
+from keras.models import model_from_json
 
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
 #DEFAULT_DATA_DIR = os.path.join(MAIN_DIR, "data") # relative path of data dir
@@ -314,6 +315,8 @@ def train(model, FLAGS):
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = 4*5000/FLAGS.batch_size
     #test set currently has 15,375 pairs
+    [X1, X2], y = next(test_batch_generator)
+
 
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
     assert os.path.exists(train_dir)
@@ -329,8 +332,34 @@ def train(model, FLAGS):
                                                 verbose = True,
                                                 max_queue_size=1,
                                                 callbacks = [reduce_lr])#, checkpointer])
-    model.save_weights(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
+    
+    #model.save_weights(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
+    model_json = model.to_json()
+    with open("model.json", "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights("model.h5")
+    print("Saved model to disk")
 
+    # -------------- load the saved model --------------
+    
+
+    # load json and create model
+    json_file = open('model.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    # load weights into new model
+    loaded_model.load_weights("model.h5")
+    print("Loaded model from disk")
+
+    # evaluate loaded model on test data
+    loaded_model.compile(loss='binary_crossentropy',
+                            optimizer='adam',
+                            metrics=['accuracy', 'mae'])
+    score = loaded_model.evaluate([X1, X2], y, verbose=0)
+    print('Test score:', score[0])
+    print('Test accuracy:', score[1])
 
 def predict(model, FLAGS):
     eval_batch_generator = psb_util.batch_generator(data_dir=FLAGS.eval_data_dir, batch_size=FLAGS.batch_size)
