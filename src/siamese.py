@@ -32,7 +32,8 @@ import keras.backend as K
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
 #DEFAULT_DATA_DIR = os.path.join(MAIN_DIR, "data") # relative path of data dir
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
-MODEL_CHECKPOINT_NAME = 'model.hdf5'
+#MODEL_CHECKPOINT_NAME = 'model.hdf5'
+MODEL_CHECKPOINT_NAME = 'model.h5'
 
 #GLOB_FLAGS = {}
 IMG_SHAPE = [224, 224, 3]
