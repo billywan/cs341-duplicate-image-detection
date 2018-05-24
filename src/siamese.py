@@ -329,7 +329,7 @@ def train(model, FLAGS):
                                                 verbose = True,
                                                 max_queue_size=1,
                                                 callbacks = [reduce_lr])#, checkpointer])
-    model.save(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
+    model.save_weights(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
 
 
 def predict(model, FLAGS):
