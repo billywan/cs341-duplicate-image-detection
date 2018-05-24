@@ -131,7 +131,7 @@ def get_flags():
 # #############################################################################
 
 
-def initialize_model(expect_exists=False, FLAGS):
+def initialize_model(FLAGS, expect_exists=False):
     # Setup experiment dir
     # if expect_exists:
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
@@ -178,10 +178,10 @@ def main():
         raise Exception("ERROR: You need to specify --experiment_name") 
 
     if FLAGS.mode == "train":
-        model = initialize_model(expect_exists=False, FLAGS)
+        model = initialize_model(FLAGS, expect_exists=False)
         siamese.train(model, FLAGS)
     elif FLAGS.mode == "eval":
-        model = initialize_model(expect_exists=True, FLAGS)
+        model = initialize_model(FLAGS, expect_exists=True)
         siamese.predict(model, FLAGS)
 
 
