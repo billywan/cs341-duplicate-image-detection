@@ -305,7 +305,7 @@ def train(model, FLAGS):
                                                 validation_steps = FLAGS.validation_steps,
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True,
-                                                max_queue_size=1
+                                                max_queue_size=1,
                                                 callbacks = [reduce_lr])#, checkpointer])
     siamese_model.save(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
 
