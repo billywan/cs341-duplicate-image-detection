@@ -20,20 +20,20 @@ EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of exper
 MODEL_CHECKPOINT_NAME = 'model.hdf5'
 
 
-# ##############################################################################################################
-# # High-level options
-# tf.app.flags.DEFINE_integer("gpu", 4, "How many GPU to use, if you have multiple.")
-# tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval")
-# tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
-# tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
-# tf.app.flags.DEFINE_integer("steps_per_epoch", 200, "batch_size")
-# tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
+##############################################################################################################
+# High-level options
+tf.app.flags.DEFINE_integer("gpu", 4, "How many GPU to use, if you have multiple.")
+tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval")
+tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
+tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
+tf.app.flags.DEFINE_integer("steps_per_epoch", 200, "batch_size")
+tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
 
-# # Hyperparameters
-# tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
-# tf.app.flags.DEFINE_float("dropout", 0.15, "Fraction of units randomly dropped on dense layers.")
-# tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
-# ########################################################################################################################
+# Hyperparameters
+tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
+tf.app.flags.DEFINE_float("dropout", 0.15, "Fraction of units randomly dropped on dense layers.")
+tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
+########################################################################################################################
 
 
 
@@ -59,23 +59,23 @@ MODEL_CHECKPOINT_NAME = 'model.hdf5'
 #tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
 #tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
 
-# ####################################################################################################################################
-# tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
-# tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
-# tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
-# tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
-# ####################################################################################################################################
+####################################################################################################################################
+tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
+tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
+tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
+tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
+####################################################################################################################################
 
 DATA_DIR = "/mnt/data2/data_batches_01_12"
 TEST_DATA_DIR = os.path.join(DATA_DIR, "test")
 EVAL_DATA_DIR = os.path.join(DATA_DIR, "eval")
 
 
-####################################################################################################################################
-# tf.app.flags.DEFINE_string("train_data_dir", DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
-# tf.app.flags.DEFINE_string("test_data_dir", TEST_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
-# tf.app.flags.DEFINE_string("eval_data_dir", EVAL_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
-####################################################################################################################################
+###################################################################################################################################
+tf.app.flags.DEFINE_string("train_data_dir", DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+tf.app.flags.DEFINE_string("test_data_dir", TEST_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+tf.app.flags.DEFINE_string("eval_data_dir", EVAL_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+###################################################################################################################################
 
 
 
@@ -126,14 +126,13 @@ def get_flags():
     return FLAGS
 
 
-# #############################################################################
-# FLAGS = tf.app.flags.FLAGS
-# #############################################################################
+#############################################################################
+FLAGS = tf.app.flags.FLAGS
+#############################################################################
 
 
 def initialize_model(FLAGS, expect_exists=False):
-    # Setup experiment dir
-    # if expect_exists:
+    
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
     model_file_path = os.path.join(train_dir, MODEL_CHECKPOINT_NAME)
     if not os.path.exists(model_file_path):
@@ -158,17 +157,13 @@ def initialize_model(FLAGS, expect_exists=False):
 
 
 
-def main():
+def main(unused_argv):
 
+    #FLAGS = get_flags()
 
-
-
-
-    FLAGS = get_flags()
-
-    # # Print an error message if you've entered flags incorrectly
-    # if len(unused_argv) != 1:
-    #     raise Exception("There is a problem with how you entered flags: %s" % unused_argv)
+    # Print an error message if you've entered flags incorrectly
+    if len(unused_argv) != 1:
+        raise Exception("There is a problem with how you entered flags: %s" % unused_argv)
 
     # Check for Python 2
     if sys.version_info[0] != 2:
@@ -189,8 +184,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    #tf.app.run()
+    #main()
+    tf.app.run()
 
 
 
