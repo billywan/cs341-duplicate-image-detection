@@ -128,7 +128,7 @@ def get_flags():
     FLAGS = parser.parse_args()
 
 
-FLAGS = get_flags():
+FLAGS = get_flags()
 
 # #############################################################################
 # FLAGS = tf.app.flags.FLAGS
