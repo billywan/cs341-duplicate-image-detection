@@ -84,9 +84,6 @@ def get_flags():
     parser = argparse.ArgumentParser(description='Siamese Neural Network')
 
 
-
-
-
     parser.add_argument('--gpu', dest='gpu', nargs='?', default=4, type=int,
             help='How many GPU to use, if you have multiple.')
     parser.add_argument('--mode', dest='mode', nargs='?', default='train', type=str,
@@ -126,16 +123,15 @@ def get_flags():
             help='eval_data_dir')
 
     FLAGS = parser.parse_args()
+    return FLAGS
 
-
-FLAGS = get_flags()
 
 # #############################################################################
 # FLAGS = tf.app.flags.FLAGS
 # #############################################################################
 
 
-def initialize_model(expect_exists=False):
+def initialize_model(expect_exists=False, FLAGS):
     # Setup experiment dir
     # if expect_exists:
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
@@ -162,17 +158,17 @@ def initialize_model(expect_exists=False):
 
 
 
-def main(unused_argv):
+def main():
 
 
 
 
 
+    FLAGS = get_flags()
 
-
-    # Print an error message if you've entered flags incorrectly
-    if len(unused_argv) != 1:
-        raise Exception("There is a problem with how you entered flags: %s" % unused_argv)
+    # # Print an error message if you've entered flags incorrectly
+    # if len(unused_argv) != 1:
+    #     raise Exception("There is a problem with how you entered flags: %s" % unused_argv)
 
     # Check for Python 2
     if sys.version_info[0] != 2:
@@ -182,10 +178,10 @@ def main(unused_argv):
         raise Exception("ERROR: You need to specify --experiment_name") 
 
     if FLAGS.mode == "train":
-        model = initialize_model(expect_exists=False)
+        model = initialize_model(expect_exists=False, FLAGS)
         siamese.train(model, FLAGS)
     elif FLAGS.mode == "eval":
-        model = initialize_model(expect_exists=True)
+        model = initialize_model(expect_exists=True, FLAGS)
         siamese.predict(model, FLAGS)
 
 
@@ -193,7 +189,8 @@ def main(unused_argv):
 
 
 if __name__ == "__main__":
-    tf.app.run()
+    main()
+    #tf.app.run()
 
 
 
