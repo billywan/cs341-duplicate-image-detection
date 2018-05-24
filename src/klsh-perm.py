@@ -1,7 +1,7 @@
 '''
-Script to perform Kernelized Locality Sensitive Hashing with the "bands" technique
+Script to perform Kernelized Locality Sensitive Hashing and nearest neighbor lookup via random permutations
 Assumes input and query gist vectors have already been computed
-Some code based on https://github.com/jakevdp/klsh
+Some code based on https://github.com/jakevdp/klsh and https://github.com/emchristiansen/CharikarLSH
 '''
 
 import os
@@ -116,8 +116,8 @@ def main():
             help='number of random objects to use when choosing kernel-space hyperplanes (t in paper)')
     parser.add_argument('-b', dest='b', nargs='?', default=50, type=int,
             help='number of hash bits (number of hash function to create, b in paper)')
-    parser.add_argument('-r', dest='r', nargs='?', default=10, type=int,
-            help='number of columns (rows as described in 246) per band, shoud divide b evenly')
+    parser.add_argument('-np', dest='np', nargs='?', default=250, type=int,
+            help='number of permutations in nearest neighbor search. For epsilon-approx, use 2n^(1/(1+epsilon)) permutations')
     parser.add_argument('--param', dest='param', nargs='?', default='../param',
             help='Specify path for LSH parameters')
     parser.add_argument('--input', dest='input', nargs='?', default='../data',
@@ -163,14 +163,11 @@ def main():
     print "Hashing query gist vectors..."
     # [q, b]
     H_Q = klsh.compute_hash_table(np.array(Q))
-
     # nearest neighbor search
-    numBands = options.b / options.r
-    print "Hashing database LSH bits into buckets..."
-    bucketsOfBands = util.generate_buckets(H, numBands)
-    print "Hashing query LSH bits into buckets and generating candidates..."
-    candidates = util.generate_candidates(bucketsOfBands, H_Q, numBands)
-
+    print "Permuting hash table..."
+    permutations = util.generate_permutations(H, options.np)
+    print "Searching for query and generating candidates..."
+    candidates = util.lookup(permutations, H_Q)
     # statistics
     positive_count = 0
     success_count = 0
