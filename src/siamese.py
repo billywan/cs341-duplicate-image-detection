@@ -187,10 +187,10 @@ def aggregate_predictions(FLAGS, predictions):
         # scores = Multiply()([k_weights, k_predictions])
         # final_score = K.sum(scores)
         assert len(predictions_by_layer) == len(weights)
-        k_weights = K.variable(weights)
-        final_score = k_weights[0]*predictions_by_layer[0]
+        #k_weights = K.variable(weights)
+        final_score = weights[0]*predictions_by_layer[0]
         for i in range(1, len(predictions_by_layer)):
-            final_score += k_weights[i]*predictions_by_layer[i]
+            final_score += weights[i]*predictions_by_layer[i]
         return final_score
 
     # def test(a, weights):
