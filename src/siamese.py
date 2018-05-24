@@ -176,24 +176,25 @@ def aggregate_predictions(FLAGS, predictions):
             res += m*n
         return res
 
+    def test(predictions_by_layer):
+        weights = get_feat_weights(FLAGS)
+        # k_weights = [K.variable(w) for w in weights]
+        # k_predictions = [K.variable(p) for p in predictions_by_layer]
+        k_weights = K.variable(weights)
+        k_predictions = K.variable(predictions_by_layer) 
+        scores = Multiply()[k_weights, k_predictions]
+        final_score = K.sum(scores)
+        return final_score
 
     # def test(a, weights):
     #     return Dot(1)(a, weights)
     #score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
-    score = Lambda(weighted_average)(predictions)
+    score = Lambda(test)(predictions)
 
     return score
 
 
-def test(FLAGS, predictions_by_layer):
-    weights = get_feat_weights(FLAGS)
-    # k_weights = [K.variable(w) for w in weights]
-    # k_predictions = [K.variable(p) for p in predictions_by_layer]
-    k_weights = K.variable(weights)
-    k_predictions = K.variable(predictions_by_layer) 
-    scores = Multiply()[k_weights, k_predictions]
-    final_score = K.sum(scores)
-    return final_score
+
 
 
 
@@ -239,8 +240,8 @@ def build_model(FLAGS):
     # for i, score in enumerate(predictions_by_layer):
     #     predictions_by_layer[i] = K.print_tensor(score, message='score {} = '.format(i))
 
-    #final_score = aggregate_predictions(FLAGS, predictions_by_layer)
-    final_score = test
+    final_score = aggregate_predictions(FLAGS, predictions_by_layer)
+    #final_score = test
     siamese_model = Model(inputs=[src_in, tar_in], outputs = [final_score], name = 'Similarity_Model')
     siamese_model.summary()
     return siamese_model
