@@ -223,31 +223,6 @@ def build_model(FLAGS):
 
 
 
-# src_feat = feature_model(src_in)
-# tar_feat = feature_model(tar_in)
-
-# src_feat = Flatten()(src_feat)
-# tar_feat = Flatten()(tar_feat)
-# src_feat = Dense(1024, activation = 'linear')(src_feat)
-# src_feat = BatchNormalization()(src_feat)
-# src_feat = Activation('relu')(src_feat)
-# tar_feat = Dense(1024, activation = 'linear')(tar_feat)
-# tar_feat = BatchNormalization()(tar_feat)
-# tar_feat = Activation('relu')(tar_feat)
-
-# combined_features = concatenate([src_feat, tar_feat], name = 'merge_features')
-# combined_features = Dense(1024, activation = 'linear')(combined_features)
-# combined_features = BatchNormalization()(combined_features)
-# combined_features = Activation('relu')(combined_features)
-# combined_features = Dense(1024, activation = 'linear')(combined_features)
-# combined_features = BatchNormalization()(combined_features)
-# combined_features = Activation('relu')(combined_features)
-# #A trick for bounded output range is to scale the target values between (0,1) and use sigmoid output + binary cross-entropy loss.
-# combined_features = Dense(1, activation = 'sigmoid')(combined_features)
-# similarity_model = Model(inputs = [src_in, tar_in], outputs = [combined_features], name = 'Similarity_Model')
-# similarity_model.summary()
-
-
 # for layer in feature_model.layers:
 #     layer.trainable=False
 # # setup the optimization process
@@ -313,7 +288,7 @@ def train(model, FLAGS):
 
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=4, min_lr=0.0001)
     checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), verbose=1, save_best_only=True)
-    
+    checkpointer.set_model(model) 
     loss_history = siamese_model.fit_generator(train_batch_generator,
                                                 validation_data = test_batch_generator,
                                                 steps_per_epoch = FLAGS.steps_per_epoch,
