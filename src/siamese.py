@@ -23,7 +23,7 @@ from keras.preprocessing import image
 # from keras.applications.imagenet_utils import decode_predictions, preprocess_input
 from keras.applications.vgg16 import preprocess_input
 from keras.models import Model
-from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda, GlobalAveragePooling2D, Dot
+from keras.layers import Input, Conv2D, BatchNormalization, MaxPool2D, Activation, Flatten, Dense, Dropout, concatenate, Lambda, GlobalAveragePooling2D, Dot, Multiply, Add
 from keras.utils import multi_gpu_model
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras import regularizers
@@ -184,6 +184,20 @@ def aggregate_predictions(FLAGS, predictions):
 
     return score
 
+
+def test(FLAGS, predictions_by_layer):
+    weights = get_feat_weights(FLAGS)
+    # k_weights = [K.variable(w) for w in weights]
+    # k_predictions = [K.variable(p) for p in predictions_by_layer]
+    k_weights = K.variable(weights)
+    k_predictions = K.variable(predictions_by_layer) 
+    scores = Multiply()[k_weights, k_predictions]
+    final_score = K.sum(scores)
+    return final_score
+
+
+
+
 def get_loss_function(FLAGS):
     def scaled_mse_loss(yTrue, yPred):
         return FLAGS.loss_scale*K.mean(K.square(yTrue - yPred))
@@ -225,8 +239,8 @@ def build_model(FLAGS):
     # for i, score in enumerate(predictions_by_layer):
     #     predictions_by_layer[i] = K.print_tensor(score, message='score {} = '.format(i))
 
-    final_score = aggregate_predictions(FLAGS, predictions_by_layer)
-
+    #final_score = aggregate_predictions(FLAGS, predictions_by_layer)
+    final_score = test
     siamese_model = Model(inputs=[src_in, tar_in], outputs = [final_score], name = 'Similarity_Model')
     siamese_model.summary()
     return siamese_model
