@@ -161,7 +161,15 @@ def get_prediction(src_feat, tar_feat, FLAGS, name="", dense_dims=PREDICTION_DEN
     return prediction
 
 def aggregate_predictions(FLAGS, predictions):
-    def weighted_average(a, weights):
+    # def weighted_average(a, weights):
+    #     assert len(a) == len(weights)
+    #     res = 0.0
+    #     for m, n in zip(a, weights):
+    #         res += m*n
+    #     return res
+
+    def weighted_average(a):
+        weights = get_feat_weights(FLAGS)
         assert len(a) == len(weights)
         res = 0.0
         for m, n in zip(a, weights):
@@ -171,7 +179,9 @@ def aggregate_predictions(FLAGS, predictions):
 
     # def test(a, weights):
     #     return Dot(1)(a, weights)
-    score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
+    #score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
+    score = Lambda(weighted_average)(predictions)
+
     return score
 
 def get_loss_function(FLAGS):
@@ -295,6 +305,7 @@ def train(model, FLAGS):
                                                 validation_steps = FLAGS.validation_steps,
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True,
+                                                max_queue_size=1
                                                 callbacks = [reduce_lr])#, checkpointer])
     siamese_model.save(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
 
@@ -310,7 +321,7 @@ def predict(model, FLAGS):
     # print "y[:30]", y[:30]
     # predictions = siamese_model.predict_generator(test_batch_generator, 
     #                                                 steps=21, 
-    #                                                 max_queue_size=10, 
+    #                                                 max_queue_size=1, 
     #                                                 workers=4, 
     #                                                 use_multiprocessing=True, 
     #                                                 verbose=1)
