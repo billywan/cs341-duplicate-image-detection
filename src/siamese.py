@@ -31,12 +31,10 @@ import keras.backend as K
 from keras.models import model_from_json
 
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
-#DEFAULT_DATA_DIR = os.path.join(MAIN_DIR, "data") # relative path of data dir
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
 #MODEL_CHECKPOINT_NAME = 'model.hdf5'
 MODEL_CHECKPOINT_NAME = 'model.h5'
 
-#GLOB_FLAGS = {}
 IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
 #VGG_MODEL.summary()
@@ -44,7 +42,7 @@ RESNET_MODEL = keras.applications.resnet50.ResNet50(include_top=True, weights='i
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
 #infer how many dense layers used for prediction
-PREDICTION_DENSE_DIMS = [1024, 1024] #[1024, 1024]
+PREDICTION_DENSE_DIMS = [1024, 1024] 
 
 def get_feat_layers(FLAGS):
     if FLAGS.base_model == "vgg16":
@@ -82,24 +80,6 @@ def get_feat_weights(FLAGS):
 #- val_loss: 0.3495 - val_acc: 0.8894 - val_mean_absolute_error: 0.1477
 #Epoch 38/40
 
-# def get_resnet_feat_layers():
-#     #channel dims: 64, 256, 512, 1024, 2048
-#     layers = ['max_pooling2d_1', 'activation_10', 'activation_22', 'activation_40', 'activation_49']
-#     return layers
-
-# def get_resnet_feat_weights():
-#     weights = [0.1, 0.1, 0.1, 0.2, 0.5]
-#     #channel dims: 64, 256, 512, 1024, 2048
-#     return weights    
-
-# def get_vgg_feat_layers():
-#     layers = ['block4_pool', 'block5_pool']
-#     return layers
-
-# def get_vgg_feat_weights():
-#     weights = [0.5, 0.5]
-#     return weights
-
 
 def get_base_model(FLAGS):
     if FLAGS.base_model == "vgg16":
@@ -115,7 +95,6 @@ def get_feature_model(FLAGS):
     base_model = get_base_model(FLAGS)
     outputs = [base_model.get_layer(name).output for name in output_layer_names]
     feature_model = Model(inputs=base_model.input, outputs=outputs, name = 'Feature_Model_'+FLAGS.base_model)
-    #feature_model.summary()
     #feature model is kept frozen
     for layer in feature_model.layers:
         layer.trainable=False
@@ -139,8 +118,6 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=Fa
         print "dropout is {}".format(FLAGS.dropout)
         feat_tensor = Dropout(FLAGS.dropout)(feat_tensor)
     
-    #feat_tensor = Activation(activation)(feat_tensor)
-
     #use bn before activation, just as resnet
     print("Batch Norm {}".format(FLAGS.batch_norm))
     if FLAGS.batch_norm:
@@ -163,13 +140,6 @@ def get_prediction(src_feat, tar_feat, FLAGS, name="", dense_dims=PREDICTION_DEN
     return prediction
 
 def aggregate_predictions(FLAGS, predictions):
-    # def weighted_average(a, weights):
-    #     assert len(a) == len(weights)
-    #     res = 0.0
-    #     for m, n in zip(a, weights):
-    #         res += m*n
-    #     return res
-
     def weighted_average(a):
         weights = get_feat_weights(FLAGS)
         assert len(a) == len(weights)
@@ -180,13 +150,6 @@ def aggregate_predictions(FLAGS, predictions):
 
     def test(predictions_by_layer):
         weights = get_feat_weights(FLAGS)
-        # k_weights = [K.variable(w) for w in weights]
-        # k_predictions = [K.variable(p) for p in predictions_by_layer]
-
-        # k_weights = K.variable(weights)
-        # k_predictions = concatenate(predictions_by_layer, axis=0) 
-        # scores = Multiply()([k_weights, k_predictions])
-        # final_score = K.sum(scores)
         assert len(predictions_by_layer) == len(weights)
         #k_weights = K.variable(weights)
         final_score = weights[0]*predictions_by_layer[0]
@@ -194,16 +157,9 @@ def aggregate_predictions(FLAGS, predictions):
             final_score += weights[i]*predictions_by_layer[i]
         return final_score
 
-    # def test(a, weights):
-    #     return Dot(1)(a, weights)
     #score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
     score = Lambda(weighted_average, name="final_lambda_layer")(predictions)
-
     return score
-
-
-
-
 
 
 
@@ -221,8 +177,6 @@ def resnet_flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu'):
     return feat_tensor
 
 def build_model(FLAGS):
-    #assign flags to global flag so other part of the code can use
-    #GLOB_FLAGS = FLAGS
     src_in = Input(shape = IMG_SHAPE, name = 'src_input')
     tar_in = Input(shape = IMG_SHAPE, name = 'tar_input')
     feature_model = get_feature_model(FLAGS)
@@ -243,56 +197,10 @@ def build_model(FLAGS):
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert len(predictions_by_layer) == len(get_feat_layers(FLAGS))
     
-    # for item in predictions_by_layer:
-    #     print item.shape
-    # for i, score in enumerate(predictions_by_layer):
-    #     predictions_by_layer[i] = K.print_tensor(score, message='score {} = '.format(i))
-
     final_score = aggregate_predictions(FLAGS, predictions_by_layer)
-    #final_score = test
     siamese_model = Model(inputs=[src_in, tar_in], outputs = [final_score], name = 'Similarity_Model')
     siamese_model.summary()
     return siamese_model
-
-
-
-# for layer in feature_model.layers:
-#     layer.trainable=False
-# # setup the optimization process
-# #A trick for bounded output range is to scale the target values between (0,1) and use sigmoid output + binary cross-entropy loss.
-
-
-
-
-
-
-# tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
-# tf.app.flags.DEFINE_integer("batch_size", 200, "batch_size")
-# tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
-# #tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
-# tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
-# tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
-# tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
-# tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
-# tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
-
-
-# FLAGS = tf.app.flags.FLAGS
-
-
-
-
-# class PrintScores(keras.callbacks.Callback):
-#     def on_epoch_end(self, epoch, logs={}):
-#         K.function()
-        
-
-    
-
-
-
-
-
 
 
 
@@ -322,7 +230,7 @@ def train(model, FLAGS):
     assert os.path.exists(train_dir)
 
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=4, min_lr=0.0001)
-    checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), verbose=1, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), monitor='val_mean_absolute_error', verbose=1, save_best_only=True, save_weights_only=True)
     #checkpointer.set_model(model) 
     loss_history = siamese_model.fit_generator(train_batch_generator,
                                                 validation_data = test_batch_generator,
@@ -331,9 +239,9 @@ def train(model, FLAGS):
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True,
                                                 max_queue_size=1,
-                                                callbacks = [reduce_lr])#, checkpointer])
+                                                callbacks = [reduce_lr, checkpointer])
     
-    model.save_weights(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
+    #model.save_weights(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
 
     loaded_model = build_model(FLAGS)
     loaded_model.load_weights(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
@@ -345,8 +253,6 @@ def train(model, FLAGS):
     # print("Saved model to disk")
 
     # # -------------- load the saved model --------------
-    
-
     # # load json and create model
     # json_file = open('model.json', 'r')
     # loaded_model_json = json_file.read()
@@ -405,17 +311,17 @@ def main():
                                                 verbose = True, 
                                                 callbacks=[reduce_lr]) 
                                                 
-    t0 = time.time()
-    predictions = siamese_model.predict_generator(test_batch_generator, 
-                                                    steps=21, 
-                                                    max_queue_size=10, 
-                                                    workers=4, 
-                                                    use_multiprocessing=True, 
-                                                    verbose=1)
-    t1 = time.time()
-    print("time taken {}".format(t1-t0))
-    print predictions.shape
-    print predictions[:10]
+    # t0 = time.time()
+    # predictions = siamese_model.predict_generator(test_batch_generator, 
+    #                                                 steps=21, 
+    #                                                 max_queue_size=10, 
+    #                                                 workers=4, 
+    #                                                 use_multiprocessing=True, 
+    #                                                 verbose=1)
+    # t1 = time.time()
+    # print("time taken {}".format(t1-t0))
+    # print predictions.shape
+    # print predictions[:10]
 
 
 
@@ -424,5 +330,4 @@ if __name__ == "__main__":
     print("batch_size is {}".format(FLAGS.batch_size))
     print("steps_per_epoch is {}".format(FLAGS.steps_per_epoch))
     #print("validation_steps is {}".format(FLAGS.validation_steps))
-
     main()
