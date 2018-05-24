@@ -288,14 +288,15 @@ def train(model, FLAGS):
 
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=4, min_lr=0.0001)
     checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), verbose=1, save_best_only=True)
-    checkpointer.set_model(model) 
+    #checkpointer.set_model(model) 
     loss_history = siamese_model.fit_generator(train_batch_generator,
                                                 validation_data = test_batch_generator,
                                                 steps_per_epoch = FLAGS.steps_per_epoch,
                                                 validation_steps = FLAGS.validation_steps,
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True,
-                                                callbacks = [reduce_lr, checkpointer])
+                                                callbacks = [reduce_lr])#, checkpointer])
+    siamese_model.save(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
 
 
 def predict(model, FLAGS):
