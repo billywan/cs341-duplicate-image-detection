@@ -254,18 +254,22 @@ def build_model(FLAGS):
 # #A trick for bounded output range is to scale the target values between (0,1) and use sigmoid output + binary cross-entropy loss.
 
 
-tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
-tf.app.flags.DEFINE_integer("batch_size", 200, "batch_size")
-tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
-#tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
-tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
-tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
-tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
-tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
-tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
 
 
-FLAGS = tf.app.flags.FLAGS
+
+
+# tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
+# tf.app.flags.DEFINE_integer("batch_size", 200, "batch_size")
+# tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
+# #tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
+# tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
+# tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
+# tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
+# tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
+# tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
+
+
+# FLAGS = tf.app.flags.FLAGS
 
 
 
@@ -288,15 +292,18 @@ def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
     model.compile(optimizer='adam', loss = loss_func, metrics = ['accuracy', 'mae'])
 
+
+
 def train(model, FLAGS):
     if FLAGS.gpu > 1: #utilize multiple gpus
         siamese_model = multi_gpu_model(model, gpus=FLAGS.gpu)
     else:
         siamese_model = model
-    #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
+
     compile_model(siamese_model, FLAGS)
-    train_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches", batch_size=FLAGS.batch_size, shuffle_files=False)
-    test_batch_generator = psb_util.batch_generator(data_dir="/mnt/data/data_batches/test", batch_size=FLAGS.batch_size)
+
+    train_batch_generator = psb_util.batch_generator(data_dir=FLAGS.train_data_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
+    test_batch_generator = psb_util.batch_generator(data_dir=FLAGS.test_data_dir, batch_size=FLAGS.batch_size)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = 4*5000/FLAGS.batch_size
     #test set currently has 15,375 pairs
@@ -304,17 +311,33 @@ def train(model, FLAGS):
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
     assert os.path.exists(train_dir)
 
+    reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=4, min_lr=0.0001)
     checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), verbose=1, save_best_only=True)
+    
     loss_history = siamese_model.fit_generator(train_batch_generator,
                                                 validation_data = test_batch_generator,
                                                 steps_per_epoch = FLAGS.steps_per_epoch,
                                                 validation_steps = FLAGS.validation_steps,
                                                 epochs = FLAGS.num_epochs,
                                                 verbose = True,
-                                                callbacks = [checkpointer])
+                                                callbacks = [reduce_lr, checkpointer])
 
 
-
+def predict(model, FLAGS):
+    eval_batch_generator = psb_util.batch_generator(data_dir=FLAGS.eval_data_dir, batch_size=FLAGS.batch_size)
+    [X1, X2], y = next(eval_batch_generator)
+    predictions = siamese_model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
+    print predictions.shape, y.shape
+    for i in range(30):
+        print "predictions vs ", predictions[i], y[i]
+    # print "predictions[:30]", predictions[:30]
+    # print "y[:30]", y[:30]
+    # predictions = siamese_model.predict_generator(test_batch_generator, 
+    #                                                 steps=21, 
+    #                                                 max_queue_size=10, 
+    #                                                 workers=4, 
+    #                                                 use_multiprocessing=True, 
+    #                                                 verbose=1)
 
 def main():
     siamese_model = build_model(FLAGS)

@@ -47,6 +47,26 @@ tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
 
 
 
+#from siamese.py
+#tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
+#tf.app.flags.DEFINE_integer("batch_size", 200, "batch_size")
+#tf.app.flags.DEFINE_integer("steps_per_epoch", 700, "batch_size")
+#tf.app.flags.DEFINE_integer("validation_steps", 100, "batch_size")
+#tf.app.flags.DEFINE_float("dropout", 0.25, "Fraction of units randomly dropped on dense layers.")
+tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
+tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
+tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
+tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
+
+
+DATA_DIR = "/mnt/data2/data_batches_01_12"
+TEST_DATA_DIR = os.path.join(DATA_DIR, "test")
+EVAL_DATA_DIR = os.path.join(DATA_DIR, "eval")
+tf.app.flags.DEFINE_string("train_data_dir", DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+tf.app.flags.DEFINE_string("test_data_dir", TEST_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+tf.app.flags.DEFINE_string("eval_data_dir", EVAL_DATA_DIR, "base model for feature extraction. Currently support resnet50 and vgg16")
+
+
 FLAGS = tf.app.flags.FLAGS
 
 def initialize_model(expect_exists=False):
@@ -59,6 +79,7 @@ def initialize_model(expect_exists=False):
             raise Exception("No existing model found at %s"%model_file_path)
         else:
             if not os.path.exists(train_dir):
+                print("Making training directory at {}".format(train_dir))
                 os.makedirs(train_dir)
             model = siamese.build_model(FLAGS)
     else:
@@ -70,6 +91,9 @@ def initialize_model(expect_exists=False):
         except:
             raise Exception("Failed to load model at %s"%model_file_path)
     return model
+
+
+
 
 
 def main(unused_argv):
@@ -89,16 +113,13 @@ def main(unused_argv):
         siamese.train(model, FLAGS)
     elif FLAGS.mode == "eval":
         model = initialize_model(expect_exists=True)
-        #model.predict()
-        #model.predict_generator()
-
+        siamese.predict(model, FLAGS)
 
 
 
 
 
 if __name__ == "__main__":
-    #main()
     tf.app.run()
 
 
