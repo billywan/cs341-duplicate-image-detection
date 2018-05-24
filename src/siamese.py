@@ -196,7 +196,7 @@ def aggregate_predictions(FLAGS, predictions):
     # def test(a, weights):
     #     return Dot(1)(a, weights)
     #score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
-    score = Lambda(test)(predictions)
+    score = Lambda(test, name="final_lambda_layer")(predictions)
 
     return score
 
