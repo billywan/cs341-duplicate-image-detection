@@ -172,9 +172,9 @@ def aggregate_predictions(FLAGS, predictions):
     def weighted_average(a):
         weights = get_feat_weights(FLAGS)
         assert len(a) == len(weights)
-        res = 0.0
-        for m, n in zip(a, weights):
-            res += m*n
+        res = weights[0]*a[0]
+        for i in range(1, len(a)):
+            res += weights[i]*a[i]
         return res
 
     def test(predictions_by_layer):
@@ -196,7 +196,7 @@ def aggregate_predictions(FLAGS, predictions):
     # def test(a, weights):
     #     return Dot(1)(a, weights)
     #score = Lambda(weighted_average, arguments={'weights':get_feat_weights(FLAGS)})(predictions)
-    score = Lambda(test, name="final_lambda_layer")(predictions)
+    score = Lambda(weighted_average, name="final_lambda_layer")(predictions)
 
     return score
 
@@ -297,7 +297,7 @@ def build_model(FLAGS):
 
 def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
-    model.compile(optimizer='adam', loss = loss_func, metrics = ['accuracy', 'mae'])
+    model.compile(optimizer='adam', loss = "binary_crossentropy", metrics = ['accuracy', 'mae'])
 
 
 
