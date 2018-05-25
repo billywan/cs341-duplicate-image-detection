@@ -21,7 +21,7 @@ MODEL_CHECKPOINT_NAME = 'model_weights.hdf5'
 
 DATA_DIR = "/mnt/data2/data_batches_01_12"
 TEST_DATA_DIR = os.path.join(DATA_DIR, "test")
-EVAL_DATA_DIR = os.path.join(DATA_DIR, "eval")
+EVAL_DATA_DIR = os.path.join(DATA_DIR, "test", "test_data_batch_000")
 
 ####################################################################################################################################
 # High-level options
@@ -45,6 +45,8 @@ tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch no
 tf.app.flags.DEFINE_string("train_data_dir", DATA_DIR, "Default training data path")
 tf.app.flags.DEFINE_string("test_data_dir", TEST_DATA_DIR, "Default testing data path")
 tf.app.flags.DEFINE_string("eval_data_dir", EVAL_DATA_DIR, "Default evaluation data path same as default testing data path")
+tf.app.flags.DEFINE_boolean("eval_with_label", True, "Wether evaluation data files have labels")
+
 ####################################################################################################################################
 
 

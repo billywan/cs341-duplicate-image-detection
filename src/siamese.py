@@ -245,7 +245,7 @@ def train(model, FLAGS):
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = 4*5000/FLAGS.batch_size
     #test set currently has 15,375 pairs
-    [X1, X2], y = next(test_batch_generator)
+    #[X1, X2], y = next(test_batch_generator)
 
 
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
@@ -288,19 +288,40 @@ def train(model, FLAGS):
     # loaded_model.compile(loss='binary_crossentropy',
     #                         optimizer='adam',
     #                         metrics=['accuracy', 'mae'])
+    [X1, X2], y = psb_util.load_data_file(FLAGS.eval_data_dir, label=True)
     compile_model(loaded_model, FLAGS)
     score = loaded_model.evaluate([X1, X2], y, verbose=0)
     print('Test score:', score[0])
     print('Test accuracy:', score[1])
+    print('Test mae:', score[2])
+
+def predict_data_file(model, file_path, FLAGS):
+    print "Predicting data in {} ...".format(file_path)
+    data = psb_util.load_data_file(file_path)
+    if FLAGS.eval_with_label:
+        [X1, X2], y = data  #I simply ignore y, but you can do things with y
+    else:
+        [X1, X2] = data
+    predictions = model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
+    print "Done predicting over {} examples(pairs).".format(len(predictions))
+    return predictions
 
 def predict(model, FLAGS):
     compile_model(model, FLAGS)
-    eval_batch_generator = psb_util.batch_generator(data_dir=FLAGS.eval_data_dir, batch_size=FLAGS.batch_size)
-    [X1, X2], y = next(eval_batch_generator)
-    predictions = siamese_model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
-    print predictions.shape, y.shape
-    for i in range(30):
-        print "predictions vs ", predictions[i], y[i]
+    #eval_batch_generator = psb_util.batch_generator(data_dir=FLAGS.eval_data_dir, batch_size=FLAGS.batch_size)
+    #[X1, X2], y = next(eval_batch_generator)
+
+    predictions = {}
+    if os.path.isdir(FLAGS.eval_data_dir):
+        data_files = [os.path.join(FLAGS.eval_data_dir, file) for file in os.listdir(data_dir)]
+        for file in data_files:
+            predictions[file] = predict_data_file(model, file, FLAGS)
+    else: 
+        predictions[FLAGS.eval_data_dir] = predict_data_file(model, FLAGS.eval_data_dir, FLAGS)
+
+    print "Prediction Finished"
+    
+    
     # print "predictions[:30]", predictions[:30]
     # print "y[:30]", y[:30]
     # predictions = siamese_model.predict_generator(test_batch_generator, 
