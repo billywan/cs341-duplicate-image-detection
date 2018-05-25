@@ -240,8 +240,8 @@ def train(model, FLAGS):
 
     compile_model(siamese_model, FLAGS)
 
-    train_batch_generator = psb_util.batch_generator(data_dir=FLAGS.train_data_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
-    test_batch_generator = psb_util.batch_generator(data_dir=FLAGS.test_data_dir, batch_size=FLAGS.batch_size)
+    train_batch_generator = psb_util.batch_generator(data_dir=FLAGS.train_data_dir, batch_size=FLAGS.batch_size, shuffle_files=True)
+    test_batch_generator = psb_util.batch_generator(data_dir=FLAGS.test_data_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
     #steps_per_epoch = 28*5000/FLAGS.batch_size
     #validation_steps = 4*5000/FLAGS.batch_size
     #test set currently has 15,375 pairs
@@ -290,10 +290,10 @@ def train(model, FLAGS):
     #                         metrics=['accuracy', 'mae'])
     [X1, X2], y = psb_util.load_data_file(FLAGS.eval_data_dir, label=True)
     compile_model(loaded_model, FLAGS)
-    score = loaded_model.evaluate([X1, X2], y, verbose=0)
-    print('Test score:', score[0])
-    print('Test accuracy:', score[1])
-    print('Test mae:', score[2])
+    scores = loaded_model.evaluate([X1, X2], y, verbose=1)
+    print('Test score:', scores[0])
+    print('Test accuracy:', scores[1])
+    print('Test mae:', scores[2])
 
 def predict_data_file(model, file_path, FLAGS):
     print "Predicting data in {} ...".format(file_path)
