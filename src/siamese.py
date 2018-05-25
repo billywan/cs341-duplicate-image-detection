@@ -33,7 +33,7 @@ from keras.models import model_from_json
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
 #MODEL_CHECKPOINT_NAME = 'model.hdf5'
-MODEL_CHECKPOINT_NAME = 'model.h5'
+MODEL_CHECKPOINT_NAME = 'model_weights.{epoch:02d}-{val_mean_absolute_error:.4f}.hdf5'
 
 IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
