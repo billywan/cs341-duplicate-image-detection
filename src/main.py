@@ -35,8 +35,8 @@ tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
 tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
 tf.app.flags.DEFINE_float("dropout", 0.15, "Fraction of units randomly dropped on dense layers.")
 tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
-tf.app.flags.DEFINE_float("reg_rate", 0.001, "Rate of regularization for each dense layers.")
-tf.app.flags.DEFINE_float("loss_scale", 20, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
+tf.app.flags.DEFINE_float("reg_rate", 0.0, "Rate of regularization for each dense layers.")
+tf.app.flags.DEFINE_float("loss_scale", 10, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
 tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
 ####################################################################################################################################
 # Data paths
@@ -69,9 +69,9 @@ def get_flags():
     parser.add_argument('--batch_size', dest='batch_size', nargs='?', default=100, type=int,
                                 help='batch_size')
 
-    parser.add_argument('--reg_rate', dest='reg_rate', nargs='?', default=0.001, type=float,
+    parser.add_argument('--reg_rate', dest='reg_rate', nargs='?', default=0.0, type=float,
                                 help='reg_rate')
-    parser.add_argument('--loss_scale', dest='loss_scale', nargs='?', default=20, type=int,
+    parser.add_argument('--loss_scale', dest='loss_scale', nargs='?', default=10, type=int,
                                 help='loss_scale')
     parser.add_argument('--base_model', dest='base_model', nargs='?', default='resnet50', type=str,
                                 help='base_model')

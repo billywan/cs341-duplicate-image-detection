@@ -210,9 +210,30 @@ def compile_model(model, FLAGS):
 
 
 
+# A wrapper class for multi-gpu model. Only single GPU model can use ModelCheckpoint call back to save weights
+# So overload the __getattribute__ method so that when getting attribute name "load" and "save", we retrieve single GPU model's attrname
+class ModelMGPU(Model):
+    def __init__(self, ser_model, gpus):
+        pmodel = multi_gpu_model(ser_model, gpus)
+        self.__dict__.update(pmodel.__dict__)
+        self._smodel = ser_model
+
+    def __getattribute__(self, attrname):
+        '''Override load and save methods to be used from the serial-model. The
+        serial-model holds references to the weights in the multi-gpu model.
+        '''
+        # return Model.__getattribute__(self, attrname)
+        if 'load' in attrname or 'save' in attrname:
+            return getattr(self._smodel, attrname)
+
+        return super(ModelMGPU, self).__getattribute__(attrname)
+
+
+
 def train(model, FLAGS):
     if FLAGS.gpu > 1: #utilize multiple gpus
-        siamese_model = multi_gpu_model(model, gpus=FLAGS.gpu)
+        siamese_model = ModelMGPU(model , FLAGS.gpu)
+        #siamese_model = multi_gpu_model(model, gpus=FLAGS.gpu)
     else:
         siamese_model = model
 
