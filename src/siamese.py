@@ -294,6 +294,7 @@ def train(model, FLAGS):
     print('Test accuracy:', score[1])
 
 def predict(model, FLAGS):
+    compile_model(model, FLAGS)
     eval_batch_generator = psb_util.batch_generator(data_dir=FLAGS.eval_data_dir, batch_size=FLAGS.batch_size)
     [X1, X2], y = next(eval_batch_generator)
     predictions = siamese_model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
