@@ -207,7 +207,7 @@ def build_model(FLAGS):
 
 def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
-    model.compile(optimizer='adam', loss = loss_func, metrics = ['accuracy', 'mae'])
+    model.compile(optimizer='adam', loss = 'binary_crossentropy', metrics = ['accuracy', 'mae'])
     #"binary_crossentropy"
 
 
