@@ -16,7 +16,9 @@ import siamese
 
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
-MODEL_CHECKPOINT_NAME = 'model_weights.{epoch:02d}-{val_mean_absolute_error:.4f}.hdf5'
+#MODEL_CHECKPOINT_NAME = 'model_weights.{epoch:02d}-{val_mean_absolute_error:.4f}.hdf5'
+MODEL_CHECKPOINT_NAME = 'model_weights.hdf5'
+
 DATA_DIR = "/mnt/data2/data_batches_01_12"
 TEST_DATA_DIR = os.path.join(DATA_DIR, "test")
 EVAL_DATA_DIR = os.path.join(DATA_DIR, "eval")
