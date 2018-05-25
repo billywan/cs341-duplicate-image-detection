@@ -206,8 +206,8 @@ def build_model(FLAGS):
 
 def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
-    model.compile(optimizer='adam', loss = "binary_crossentropy", metrics = ['accuracy', 'mae'])
-
+    model.compile(optimizer='adam', loss = loss_func, metrics = ['accuracy', 'mae'])
+    #"binary_crossentropy"
 
 
 # A wrapper class for multi-gpu model. Only single GPU model can use ModelCheckpoint call back to save weights
@@ -284,9 +284,10 @@ def train(model, FLAGS):
     # print("Loaded model from disk")
 
     # evaluate loaded model on test data
-    loaded_model.compile(loss='binary_crossentropy',
-                            optimizer='adam',
-                            metrics=['accuracy', 'mae'])
+    # loaded_model.compile(loss='binary_crossentropy',
+    #                         optimizer='adam',
+    #                         metrics=['accuracy', 'mae'])
+    compile_model(loaded_model, FLAGS)
     score = loaded_model.evaluate([X1, X2], y, verbose=0)
     print('Test score:', score[0])
     print('Test accuracy:', score[1])
