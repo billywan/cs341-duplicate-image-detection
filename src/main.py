@@ -29,14 +29,14 @@ tf.app.flags.DEFINE_integer("gpu", 4, "How many GPU to use, if you have multiple
 tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval / predict")
 tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
 tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
-tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
+tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
 tf.app.flags.DEFINE_integer("steps_per_epoch", 200, "batch_size")
 tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
 ####################################################################################################################################
 # Hyperparameters
 tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
-tf.app.flags.DEFINE_float("dropout", 0.15, "Fraction of units randomly dropped on dense layers.")
-tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
+tf.app.flags.DEFINE_float("dropout", 0.10, "Fraction of units randomly dropped on dense layers.")
+tf.app.flags.DEFINE_integer("batch_size", 400, "Batch size to use")
 tf.app.flags.DEFINE_float("reg_rate", 0.0, "Rate of regularization for each dense layers.")
 tf.app.flags.DEFINE_float("loss_scale", 10, "Scale factor to apply on prediction loss; used to make the prediction loss comparable to l2 weight regularization")
 tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch normalization on each dense layer")
