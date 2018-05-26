@@ -36,7 +36,6 @@ MODEL_CHECKPOINT_NAME = 'model_weights.hdf5'
 
 IMG_SHAPE = [224, 224, 3]
 VGG_MODEL = keras.applications.VGG16(weights='imagenet', include_top=False)
-#VGG_MODEL.summary()
 RESNET_MODEL = keras.applications.resnet50.ResNet50(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=1000)
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
@@ -293,7 +292,7 @@ def predict_data_file(model, file_path, FLAGS):
     data = psb_util.load_data_file(file_path, expect_label=False)
     [X1, X2], _ = data # At prediction time, no labels are available
     predictions = model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
-    print "Done predicting over {} examples(pairs).".format(len(predictions))
+    print "Done predicting over {} example pairs.".format(len(predictions))
     return predictions
 
 def predict(model, FLAGS):
