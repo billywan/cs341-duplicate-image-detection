@@ -208,6 +208,7 @@ def build_model(FLAGS):
 
 def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
+    model = ModelMGPU(model , FLAGS.gpu)
     model.compile(optimizer='adam', loss = 'binary_crossentropy', metrics = ['accuracy', 'mae'])
     #"binary_crossentropy"
     return model
@@ -301,7 +302,7 @@ def train(model, FLAGS):
 def predict_data_file(model, file_path, FLAGS):
     print "Predicting data in {} ...".format(file_path)
     data = psb_util.load_data_file(file_path, expect_label=False)
-    [X1, X2] = data # At prediction time, no labels are available
+    [X1, X2], _ = data # At prediction time, no labels are available
     predictions = model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
     print "Done predicting over {} examples(pairs).".format(len(predictions))
     return predictions
