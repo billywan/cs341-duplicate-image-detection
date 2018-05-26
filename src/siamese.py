@@ -346,7 +346,7 @@ def eval(model, FLAGS):
     evaluations = {}
     if os.path.isdir(FLAGS.eval_data_path):
         print "You supplied the directory {} for evaluation".format(FLAGS.eval_data_path)
-        data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(data_dir)]
+        data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(FLAGS.eval_data_path)]
         for file in data_files:
             evaluations[file] = eval_data_file(model, file, FLAGS)
     else: 
