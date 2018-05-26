@@ -208,7 +208,9 @@ def build_model(FLAGS):
 
 def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
-    model = ModelMGPU(model , FLAGS.gpu)
+    if FLAGS.gpu > 1: #utilize multiple gpus
+        model = ModelMGPU(model , FLAGS.gpu)
+        #siamese_model = multi_gpu_model(model, gpus=FLAGS.gpu)
     model.compile(optimizer='adam', loss = 'binary_crossentropy', metrics = ['accuracy', 'mae'])
     #"binary_crossentropy"
     return model
@@ -235,13 +237,8 @@ class ModelMGPU(Model):
 
 
 def train(model, FLAGS):
-    if FLAGS.gpu > 1: #utilize multiple gpus
-        siamese_model = ModelMGPU(model , FLAGS.gpu)
-        #siamese_model = multi_gpu_model(model, gpus=FLAGS.gpu)
-    else:
-        siamese_model = model
 
-    siamese_model = compile_model(siamese_model, FLAGS)
+    model = compile_model(model, FLAGS)
 
     train_batch_generator = psb_util.batch_generator(data_dir=FLAGS.train_data_dir, batch_size=FLAGS.batch_size, shuffle_files=True)
     test_batch_generator = psb_util.batch_generator(data_dir=FLAGS.test_data_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
@@ -257,14 +254,14 @@ def train(model, FLAGS):
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=4, min_lr=0.00001)
     checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), monitor='val_mean_absolute_error', verbose=1, save_best_only=True, save_weights_only=True)
     #checkpointer.set_model(model) 
-    loss_history = siamese_model.fit_generator(train_batch_generator,
-                                                validation_data = test_batch_generator,
-                                                steps_per_epoch = FLAGS.steps_per_epoch,
-                                                validation_steps = FLAGS.validation_steps,
-                                                epochs = FLAGS.num_epochs,
-                                                verbose = True,
-                                                max_queue_size=1,
-                                                callbacks = [reduce_lr, checkpointer])
+    loss_history = model.fit_generator(train_batch_generator,
+                                        validation_data = test_batch_generator,
+                                        steps_per_epoch = FLAGS.steps_per_epoch,
+                                        validation_steps = FLAGS.validation_steps,
+                                        epochs = FLAGS.num_epochs,
+                                        verbose = True,
+                                        max_queue_size=1,
+                                        callbacks = [reduce_lr, checkpointer])
     
     #model.save_weights(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
 
@@ -291,7 +288,7 @@ def train(model, FLAGS):
     # loaded_model.compile(loss='binary_crossentropy',
     #                         optimizer='adam',
     #                         metrics=['accuracy', 'mae'])
-    [X1, X2], y = psb_util.load_data_file(FLAGS.eval_data_dir, label=True)
+    [X1, X2], y = psb_util.load_data_file("/mnt/data2/data_batches_01_12/test/test_data_batch_000", label=True)
     loaded_model = compile_model(loaded_model, FLAGS)
     scores = loaded_model.evaluate([X1, X2], y, verbose=1)
     print('Test score:', scores[0])
@@ -346,7 +343,6 @@ def eval_data_file(model, file_path, FLAGS):
     return scores
 
 def eval(model, FLAGS):
-    model = ModelMGPU(model , FLAGS.gpu)
     model = compile_model(model, FLAGS)
     evaluations = {}
     if os.path.isdir(FLAGS.eval_data_path):
