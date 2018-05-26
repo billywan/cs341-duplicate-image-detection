@@ -114,6 +114,7 @@ def initialize_model(FLAGS, expect_exists=False):
         print "Trying to load existing model at %s" %model_file_path
         model = siamese.build_model(FLAGS)
         model.load_weights(model_file_path)
+        print "Finished loading model, based on {}.".format(FLAGS.base_model)
         # except e:
         #     raise Exception("Failed to load model at %s"%model_file_path)
     return model

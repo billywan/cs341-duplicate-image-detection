@@ -318,7 +318,7 @@ def predict(model, FLAGS):
     else: 
         predictions[FLAGS.eval_data_path] = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
 
-    print "Prediction Finished"
+    print "Prediction finished."
     
     #dump the predictions into a file.
     
@@ -334,7 +334,7 @@ def predict(model, FLAGS):
 
 
 def eval_data_file(model, file_path, FLAGS):
-    print "Evaluating data in {} ...".format(file_path)
+    print "Evaluating data in {}...".format(file_path)
     data = psb_util.load_data_file(file_path, expect_label=True)
     [X1, X2], y = data # At evaluation time, labels are provided
     scores = model.evaluate([X1, X2], y, batch_size = FLAGS.batch_size, verbose=1)
@@ -345,6 +345,7 @@ def eval(model, FLAGS):
     compile_model(model, FLAGS)
     evaluations = {}
     if os.path.isdir(FLAGS.eval_data_path):
+        print "You supplied the directory {} for evaluation".format(FLAGS.eval_data_path)
         data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(data_dir)]
         for file in data_files:
             evaluations[file] = eval_data_file(model, file, FLAGS)
@@ -357,7 +358,7 @@ def eval(model, FLAGS):
     index = []
     for filename, scores in evaluations.iteritems():
         results.append(list(scores))
-        index.append(filename)
+        index.append(os.path.basename(filename))
     columns = list(model.metrics_names)
     results_df = pd.DataFrame(results, columns=columns, index=index)
     print results_df

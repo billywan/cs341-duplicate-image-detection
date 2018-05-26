@@ -33,7 +33,7 @@ DATA_DIR = "/Users/EricX/Desktop/CS341/data_batches"
 
 
 def load_data_file(file_path, expect_label=False):
-    print('\nLoading file {}\n'.format(file_path))
+    print('\nLoading file {}...\n'.format(file_path))
     with open(file_path, 'rb') as handle:
         data_dict = pickle.load(handle)
         X0, X1, y = data_dict['X1'], data_dict['X2'], None
