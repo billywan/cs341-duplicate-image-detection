@@ -21,7 +21,7 @@ MODEL_CHECKPOINT_NAME = 'model_weights.hdf5'
 
 DATA_DIR = "/mnt/data2/data_batches_01_12"
 TEST_DATA_DIR = os.path.join(DATA_DIR, "test")
-EVAL_DATA_PATH = os.path.join(DATA_DIR, "test", "test_data_batch_000")
+EVAL_DATA_PATH = os.path.join(DATA_DIR, "test")#, "test_data_batch_000")
 
 ####################################################################################################################################
 # High-level options
@@ -104,17 +104,17 @@ def initialize_model(FLAGS, expect_exists=False):
     model_file_path = os.path.join(train_dir, MODEL_CHECKPOINT_NAME)
     if not os.path.exists(model_file_path):
         if expect_exists:
-            raise Exception("No existing model found at %s"%model_file_path)
+            raise Exception("No existing model found at %s."%model_file_path)
         else:
             if not os.path.exists(train_dir):
-                print("Making training directory at {}".format(train_dir))
+                print("Making training directory at {}.".format(train_dir))
                 os.makedirs(train_dir)
             model = siamese.build_model(FLAGS)
     else:
-        print "Trying to load existing model at %s" %model_file_path
+        print "Trying to load existing model at %s..." %model_file_path
         model = siamese.build_model(FLAGS)
         model.load_weights(model_file_path)
-        print "Finished loading model, based on {}.".format(FLAGS.base_model)
+        print "Finished loading model based on {}.".format(FLAGS.base_model)
         # except e:
         #     raise Exception("Failed to load model at %s"%model_file_path)
     return model
@@ -139,12 +139,15 @@ def main(unused_argv):
         raise Exception("ERROR: You need to specify --experiment_name") 
 
     if FLAGS.mode == "train":
+        print "Training Mode"
         model = initialize_model(FLAGS, expect_exists=False)
         siamese.train(model, FLAGS)
     elif FLAGS.mode == "predict":
+        print "Prediction Mode"
         model = initialize_model(FLAGS, expect_exists=True)
         siamese.predict(model, FLAGS)
     elif FLAGS.mode == "eval":
+        print "Evaluation Mode"
         model = initialize_model(FLAGS, expect_exists=True)
         siamese.eval(model, FLAGS)
     else:

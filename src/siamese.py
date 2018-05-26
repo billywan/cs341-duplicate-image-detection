@@ -350,10 +350,11 @@ def eval(model, FLAGS):
         for file in data_files:
             evaluations[file] = eval_data_file(model, file, FLAGS)
     else: 
+        print "You supplied a single file for evaluation"
         evaluations[FLAGS.eval_data_path] = eval_data_file(model, FLAGS.eval_data_path, FLAGS)
 
     print "Evaluation finished, printing results..."
-    print "="*80
+    print "="*60
     results = []
     index = []
     for filename, scores in evaluations.iteritems():
@@ -362,7 +363,7 @@ def eval(model, FLAGS):
     columns = list(model.metrics_names)
     results_df = pd.DataFrame(results, columns=columns, index=index)
     print results_df
-    print "="*80
+    print "="*60
     #dump the result into a file.
 
 
