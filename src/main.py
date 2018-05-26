@@ -117,8 +117,8 @@ def initialize_model(FLAGS, expect_exists=False):
             model.load_weights(model_file_path)
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
-            raise Exception("Failed to load model at %s"%model_file_path)
+        # except e:
+        #     raise Exception("Failed to load model at %s"%model_file_path)
     return model
 
 
