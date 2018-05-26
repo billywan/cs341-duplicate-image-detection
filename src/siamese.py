@@ -210,6 +210,7 @@ def compile_model(model, FLAGS):
     loss_func = get_loss_function(FLAGS)
     model.compile(optimizer='adam', loss = 'binary_crossentropy', metrics = ['accuracy', 'mae'])
     #"binary_crossentropy"
+    return model
 
 
 # A wrapper class for multi-gpu model. Only single GPU model can use ModelCheckpoint call back to save weights
@@ -239,7 +240,7 @@ def train(model, FLAGS):
     else:
         siamese_model = model
 
-    compile_model(siamese_model, FLAGS)
+    siamese_model = compile_model(siamese_model, FLAGS)
 
     train_batch_generator = psb_util.batch_generator(data_dir=FLAGS.train_data_dir, batch_size=FLAGS.batch_size, shuffle_files=True)
     test_batch_generator = psb_util.batch_generator(data_dir=FLAGS.test_data_dir, batch_size=FLAGS.batch_size, shuffle_files=False)
@@ -290,7 +291,7 @@ def train(model, FLAGS):
     #                         optimizer='adam',
     #                         metrics=['accuracy', 'mae'])
     [X1, X2], y = psb_util.load_data_file(FLAGS.eval_data_dir, label=True)
-    compile_model(loaded_model, FLAGS)
+    loaded_model = compile_model(loaded_model, FLAGS)
     scores = loaded_model.evaluate([X1, X2], y, verbose=1)
     print('Test score:', scores[0])
     print('Test accuracy:', scores[1])
@@ -306,7 +307,7 @@ def predict_data_file(model, file_path, FLAGS):
     return predictions
 
 def predict(model, FLAGS):
-    compile_model(model, FLAGS)
+    model = compile_model(model, FLAGS)
     #eval_batch_generator = psb_util.batch_generator(data_dir=FLAGS.eval_data_dir, batch_size=FLAGS.batch_size)
     #[X1, X2], y = next(eval_batch_generator)
 
@@ -334,7 +335,7 @@ def predict(model, FLAGS):
 
 
 def eval_data_file(model, file_path, FLAGS):
-    print "Evaluating data in {}...".format(file_path)
+    print "\nEvaluating data in {}...".format(file_path)
     data = psb_util.load_data_file(file_path, expect_label=True)
     [X1, X2], y = data # At evaluation time, labels are provided
     scores = model.evaluate([X1, X2], y, batch_size = FLAGS.batch_size, verbose=1)
@@ -342,10 +343,11 @@ def eval_data_file(model, file_path, FLAGS):
     return scores
 
 def eval(model, FLAGS):
-    compile_model(model, FLAGS)
+    model = ModelMGPU(model , FLAGS.gpu)
+    model = compile_model(model, FLAGS)
     evaluations = {}
     if os.path.isdir(FLAGS.eval_data_path):
-        print "You supplied the directory {} for evaluation".format(FLAGS.eval_data_path)
+        print "You supplied the directory {} for evaluation.".format(FLAGS.eval_data_path)
         data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(FLAGS.eval_data_path)]
         for file in data_files:
             evaluations[file] = eval_data_file(model, file, FLAGS)
@@ -371,7 +373,7 @@ def main():
     siamese_model = build_model(FLAGS)
     siamese_model = multi_gpu_model(siamese_model, gpus=4)
     #siamese_model.compile(optimizer='adam', loss = 'mean_squared_error', metrics = ['mae'])
-    compile_model(siamese_model, FLAGS)
+    siamese_model = compile_model(siamese_model, FLAGS)
     data_dir = "/mnt/data2/data_batches_01_12"
     test_dir = os.path.join(data_dir, "test")
     print("data_dir is {}".format(data_dir))
