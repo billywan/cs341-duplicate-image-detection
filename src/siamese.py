@@ -127,7 +127,7 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu'):
 def get_prediction(src_feat, tar_feat, FLAGS, name="", dense_dims=PREDICTION_DENSE_DIMS):
     combined_feat = concatenate([src_feat, tar_feat], name='merge_features'+name)
     for dense_dims in PREDICTION_DENSE_DIMS:
-        combined_feat = dense_with_bn(combined_feat, FLAGS, out_dim=dense_dims, l2_reg=True)
+        combined_feat = dense_with_bn(combined_feat, FLAGS, out_dim=dense_dims)
     #A trick for bounded output range is to scale the target values between (0,1) and use sigmoid output + binary cross-entropy loss.
     prediction = Dense(1, activation = 'sigmoid')(combined_feat)
     return prediction
