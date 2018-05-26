@@ -313,7 +313,7 @@ def predict(model, FLAGS):
 
     predictions = {}
     if os.path.isdir(FLAGS.eval_data_path):
-        data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(data_dir)]
+        data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(FLAGS.eval_data_path)]
         for file in data_files:
             predictions[file] = predict_data_file(model, file, FLAGS)
     else: 
