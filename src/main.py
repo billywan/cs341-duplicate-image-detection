@@ -113,7 +113,7 @@ def initialize_model(FLAGS, expect_exists=False):
     else:
         print "Trying to load existing model at %s" %model_file_path
         try:
-            model = build_model(FLAGS)
+            model = siamese.build_model(FLAGS)
             model.load_weights(model_file_path)
         except (KeyboardInterrupt, SystemExit):
             raise
