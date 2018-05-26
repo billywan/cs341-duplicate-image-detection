@@ -21,12 +21,12 @@ MODEL_CHECKPOINT_NAME = 'model_weights.hdf5'
 
 DATA_DIR = "/mnt/data2/data_batches_01_12"
 TEST_DATA_DIR = os.path.join(DATA_DIR, "test")
-EVAL_DATA_DIR = os.path.join(DATA_DIR, "test", "test_data_batch_000")
+EVAL_DATA_PATH = os.path.join(DATA_DIR, "test", "test_data_batch_000")
 
 ####################################################################################################################################
 # High-level options
 tf.app.flags.DEFINE_integer("gpu", 4, "How many GPU to use, if you have multiple.")
-tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval")
+tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval / predict")
 tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
 tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
 tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
@@ -44,8 +44,7 @@ tf.app.flags.DEFINE_boolean("batch_norm", True , "whether or not to use batch no
 # Data paths
 tf.app.flags.DEFINE_string("train_data_dir", DATA_DIR, "Default training data path")
 tf.app.flags.DEFINE_string("test_data_dir", TEST_DATA_DIR, "Default testing data path")
-tf.app.flags.DEFINE_string("eval_data_dir", EVAL_DATA_DIR, "Default evaluation data path same as default testing data path")
-tf.app.flags.DEFINE_boolean("eval_with_label", True, "Wether evaluation data files have labels")
+tf.app.flags.DEFINE_string("eval_data_path", EVAL_DATA_PATH, "Evaluation data path, can be either dir or file. Default to testing data path")
 
 ####################################################################################################################################
 
@@ -57,7 +56,7 @@ def get_flags():
     parser.add_argument('--gpu', dest='gpu', nargs='?', default=4, type=int,
                                 help='How many GPU to use, if you have multiple.')
     parser.add_argument('--mode', dest='mode', nargs='?', default='train', type=str,
-                                help='Available modes: train / eval')
+                                help='Available modes: train / eval / predict')
     parser.add_argument('--experiment_name', dest='experiment_name', nargs='?', default='', type=str,
                                 help='Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment')
     parser.add_argument('--num_epochs', dest='num_epochs', nargs='?', default=0, type=int,
@@ -87,7 +86,7 @@ def get_flags():
                                 help='Default training data path')
     parser.add_argument('--test_data_dir', dest='test_data_dir', nargs='?', default=TEST_DATA_DIR, type=str,
                                 help='Default testing data path')
-    parser.add_argument('--eval_data_dir', dest='eval_data_dir', nargs='?', default=EVAL_DATA_DIR, type=str,
+    parser.add_argument('--eval_data_path', dest='eval_data_dir', nargs='?', default=EVAL_DATA_PATH, type=str,
                                 help='eval_data_dir')
 
     FLAGS = parser.parse_args()
@@ -144,9 +143,14 @@ def main(unused_argv):
     if FLAGS.mode == "train":
         model = initialize_model(FLAGS, expect_exists=False)
         siamese.train(model, FLAGS)
-    elif FLAGS.mode == "eval":
+    elif FLAGS.mode == "predict":
         model = initialize_model(FLAGS, expect_exists=True)
         siamese.predict(model, FLAGS)
+    elif FLAGS.mode == "eval":
+        model = initialize_model(FLAGS, expect_exists=True)
+        siamese.eval(model, FLAGS)
+    else:
+        raise Exception("ERROR: Unknown mode (train/eval/predict)")
 
 
 

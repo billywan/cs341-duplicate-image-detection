@@ -23,7 +23,7 @@ import pickle
 import os
 import sys
 from keras.preprocessing import image
-from keras.applications.vgg16 import preprocess_input
+from keras.applications.vgg16 import preprocess_input #resnet uses same preprocess_input method as vgg16 & vgg19.
 import numpy as np
 import random
 
@@ -32,12 +32,12 @@ DATA_DIR = "/Users/EricX/Desktop/CS341/data_batches"
 
 
 
-def load_data_file(file_path, label=False):
+def load_data_file(file_path, expect_label=False):
     print('\nLoading file {}\n'.format(file_path))
     with open(file_path, 'rb') as handle:
         data_dict = pickle.load(handle)
         X0, X1, y = data_dict['X1'], data_dict['X2'], None
-        if label:
+        if expect_label:
             y = data_dict['y']
             y.astype(np.float32)
         X0, X1 = X0.astype(np.float32), X1.astype(np.float32)

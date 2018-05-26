@@ -5,6 +5,7 @@ import os, sys, time
 import random
 import pickle
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot
 from matplotlib.pyplot import imshow
 #from sklearn.decomposition import PCA
@@ -251,7 +252,7 @@ def train(model, FLAGS):
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
     assert os.path.exists(train_dir)
 
-    reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=4, min_lr=0.0001)
+    reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=4, min_lr=0.00001)
     checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), monitor='val_mean_absolute_error', verbose=1, save_best_only=True, save_weights_only=True)
     #checkpointer.set_model(model) 
     loss_history = siamese_model.fit_generator(train_batch_generator,
@@ -295,13 +296,11 @@ def train(model, FLAGS):
     print('Test accuracy:', scores[1])
     print('Test mae:', scores[2])
 
+
 def predict_data_file(model, file_path, FLAGS):
     print "Predicting data in {} ...".format(file_path)
-    data = psb_util.load_data_file(file_path)
-    if FLAGS.eval_with_label:
-        [X1, X2], y = data  #I simply ignore y, but you can do things with y
-    else:
-        [X1, X2] = data
+    data = psb_util.load_data_file(file_path, expect_label=False)
+    [X1, X2] = data # At prediction time, no labels are available
     predictions = model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
     print "Done predicting over {} examples(pairs).".format(len(predictions))
     return predictions
@@ -312,15 +311,16 @@ def predict(model, FLAGS):
     #[X1, X2], y = next(eval_batch_generator)
 
     predictions = {}
-    if os.path.isdir(FLAGS.eval_data_dir):
-        data_files = [os.path.join(FLAGS.eval_data_dir, file) for file in os.listdir(data_dir)]
+    if os.path.isdir(FLAGS.eval_data_path):
+        data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(data_dir)]
         for file in data_files:
             predictions[file] = predict_data_file(model, file, FLAGS)
     else: 
-        predictions[FLAGS.eval_data_dir] = predict_data_file(model, FLAGS.eval_data_dir, FLAGS)
+        predictions[FLAGS.eval_data_path] = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
 
     print "Prediction Finished"
     
+    #dump the predictions into a file.
     
     # print "predictions[:30]", predictions[:30]
     # print "y[:30]", y[:30]
@@ -330,6 +330,40 @@ def predict(model, FLAGS):
     #                                                 workers=4, 
     #                                                 use_multiprocessing=True, 
     #                                                 verbose=1)
+
+
+
+def eval_data_file(model, file_path, FLAGS):
+    print "Evaluating data in {} ...".format(file_path)
+    data = psb_util.load_data_file(file_path, expect_label=True)
+    [X1, X2], y = data # At evaluation time, labels are provided
+    scores = model.evaluate([X1, X2], y, batch_size = FLAGS.batch_size, verbose=1)
+    #print "Done evaluating over {} examples(pairs).".format(len(predictions))
+    return scores
+
+def eval(model, FLAGS):
+    compile_model(model, FLAGS)
+    evaluations = {}
+    if os.path.isdir(FLAGS.eval_data_path):
+        data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(data_dir)]
+        for file in data_files:
+            evaluations[file] = eval_data_file(model, file, FLAGS)
+    else: 
+        evaluations[FLAGS.eval_data_path] = eval_data_file(model, FLAGS.eval_data_path, FLAGS)
+
+    print "Evaluation finished, printing results..."
+    print "="*20
+    results = []
+    index = []
+    for filename, scores in evaluations.iteritems():
+        results.append(list(scores))
+        index.append(filename)
+    columns = list(model.metrics_names)
+    results_df = pd.DataFrame(results, columns=columns, index=index)
+    print results_df
+    print "="*20
+    #dump the result into a file.
+
 
 def main():
     siamese_model = build_model(FLAGS)
