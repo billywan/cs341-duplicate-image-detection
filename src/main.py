@@ -1,3 +1,11 @@
+'''
+Usage:
+    Train: omitted, you guys shouldn't train a model yourself
+    Evaluate: python src/main.py --mode=eval --EVAL_DATA_PATH=<default to /mnt/data2/data_batches_01_12/test/> --base_model=<vgg16/resnet50> --experiment_name=<path to experiment folder> --gpu=4
+    Predict: use --mode=predict, all else equal
+'''
+
+
 from __future__ import absolute_import
 from __future__ import division
 
@@ -30,8 +38,8 @@ tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval / pre
 tf.app.flags.DEFINE_string("base_model", "resnet50" , "base model for feature extraction. Currently support resnet50 and vgg16")
 tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
 tf.app.flags.DEFINE_integer("num_epochs", 10, "Number of epochs to train. 0 means train indefinitely")
-tf.app.flags.DEFINE_integer("steps_per_epoch", 200, "batch_size")
-tf.app.flags.DEFINE_integer("validation_steps", 20, "batch_size")
+tf.app.flags.DEFINE_integer("steps_per_epoch", 100, "batch_size")
+tf.app.flags.DEFINE_integer("validation_steps", 28, "batch_size")
 ####################################################################################################################################
 # Hyperparameters
 tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
