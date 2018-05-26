@@ -320,6 +320,8 @@ def predict(model, FLAGS):
     else: 
         predictions[FLAGS.eval_data_path] = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
 
+    for k, v in predictions.iteritems():
+        print "predicted {num} examples in {file}".format(num=v.shape, file=k)
     print "Prediction finished."
     
     #dump the predictions into a file.
