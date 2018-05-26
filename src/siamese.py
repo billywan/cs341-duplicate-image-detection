@@ -8,8 +8,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot
 from matplotlib.pyplot import imshow
-#from sklearn.decomposition import PCA
-#from scipy.spatial import distance
 from tqdm import tqdm
 from functools import partial
 #adding parent/util directory to the system path, so that any file in the util package can be imported
@@ -33,7 +31,6 @@ from keras.models import model_from_json
 
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
-#MODEL_CHECKPOINT_NAME = 'model.hdf5'
 #MODEL_CHECKPOINT_NAME = 'model_weights.{epoch:02d}-{val_mean_absolute_error:.4f}.hdf5'
 MODEL_CHECKPOINT_NAME = 'model_weights.hdf5'
 
@@ -110,10 +107,8 @@ def flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu'):
     feat_tensor = dense_with_bn(feat_tensor, FLAGS, out_dim, activation)
     return feat_tensor
 
-def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=False):
-    kernel_regularizer=None
-    if l2_reg:
-        kernel_regularizer = regularizers.l2(FLAGS.reg_rate)
+def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu'):
+    kernel_regularizer = regularizers.l2(FLAGS.reg_rate) if FLAGS.reg_rate else None
     feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
     
     if FLAGS.dropout != 0:
@@ -127,10 +122,7 @@ def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu', l2_reg=Fa
         feat_tensor = BatchNormalization()(feat_tensor)
     
     feat_tensor = Activation(activation)(feat_tensor)
-    
-    # if FLAGS.dropout != 0:
-    #     print "dropout is {}".format(FLAGS.dropout)
-    #     feat_tensor = Dropout(FLAGS.dropout)(feat_tensor)
+
     return feat_tensor
 
 def get_prediction(src_feat, tar_feat, FLAGS, name="", dense_dims=PREDICTION_DENSE_DIMS):
