@@ -1,6 +1,8 @@
 '''
 Script to perform Kernelized Locality Sensitive Hashing with the "bands" technique
 Assumes input and query gist vectors have already been computed
+Outputs generated query and candidate batches for Siamese network
+
 Some code based on https://github.com/jakevdp/klsh
 '''
 
@@ -11,6 +13,7 @@ import random
 
 import numpy as np
 import pickle
+from PIL import Image
 from sklearn.metrics.pairwise import rbf_kernel
 
 import util
@@ -122,11 +125,14 @@ def main():
             help='Specify path for LSH parameters')
     parser.add_argument('--input', dest='input', nargs='?', default='../data',
             help='Specify path for LSH processed input data')
+    parser.add_argument('--output', dest='output', help='Specify filename for generated candidate batches')
     (options, args) = parser.parse_known_args()
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
     INPUT_DIR = os.path.join(PROJECT_DIR, options.input)
+    DATA_DIR = "/mnt/data/photoshopbattle_images"
+    BATCH_OUTPUT_ = "/mnt/data/psb_eval_batch"
 
     if os.path.exists(PARAM_DIR):
         print "Found existing parameters, loading..."
@@ -194,6 +200,32 @@ def main():
     print "{}% of images have candidates".format(1.0 * positive_count)
     print "Average number of candidates {}".format(np.mean(numCandidates))
     print "Original found in candidates for {}% of images".format(1.0 * success_count)
+
+    # generate batches for Siamese evaluation
+    print "Generating batches..."
+    X1 = []
+    X2 = []
+    y = []
+    for i, candidate in enumerate(candidates):
+        numCandidate = len(candidate)
+        queryName = queries[i]
+        print "Found {} candidates for query {}: {}, e.g. {}".format(numCandidate, i, queryName, random.sample(candidate, 5))
+        if numCandidate > 0:
+            queryDir = os.path.join(DATA_DIR, queryName.rsplit('_', 1)[0])
+            query = np.array(Image.open(os.path.join(queryDir, queryName)))
+            for candidateIdx in candidate:
+                # get candidate submission dir name
+                submissionDir = os.path.join(DATA_DIR, submissionList[candidateIdx])
+                submission = sorted(os.listdir(submissionDir))[0]
+                X1.append(np.array(Image.open(os.path.join(submissionDir, submission))))
+                X2.append(query)
+                if submissionDir in queryName:
+                    print "Original found in candidates for query {}: {}".format(i, queryName)
+                    y.append(1.0)
+                else:
+                    y.append(0.0)
+    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(options.output, 'wb'))
+
 
 if __name__ == "__main__":
     main()
