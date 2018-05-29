@@ -117,9 +117,9 @@ def main():
             help='amount of data to use when approximating the data distribution in the kernel subspace (p in paper).')
     parser.add_argument('-t', dest='t', nargs='?', default=30, type=int,
             help='number of random objects to use when choosing kernel-space hyperplanes (t in paper)')
-    parser.add_argument('-b', dest='b', nargs='?', default=50, type=int,
+    parser.add_argument('-b', dest='b', nargs='?', default=128, type=int,
             help='number of hash bits (number of hash function to create, b in paper)')
-    parser.add_argument('-r', dest='r', nargs='?', default=10, type=int,
+    parser.add_argument('-r', dest='r', nargs='?', default=8, type=int,
             help='number of columns (rows as described in 246) per band, shoud divide b evenly')
     parser.add_argument('--param', dest='param', nargs='?', default='../param',
             help='Specify path for LSH parameters')
