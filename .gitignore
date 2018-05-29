@@ -115,4 +115,4 @@ Preprocessed_CASIA_Dataset/
 *.jpg
 
 # saved params
-param/
+param*/

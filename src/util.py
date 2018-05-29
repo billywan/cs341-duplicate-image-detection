@@ -37,7 +37,7 @@ def generate_candidates(bucketsOfBands, queryBitVectors, numBands):
             if key in buckets:
                 candidates.update(buckets[key])
         if not candidates:
-            print "No candidate found for query {}".formt(query_num)
+            print "No candidate found for query {}".format(query_num)
         candidatesForQueries.append(list(candidates))
     return candidatesForQueries
 
