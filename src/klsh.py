@@ -211,7 +211,7 @@ def main():
         numCandidate = len(candidateList)
         queryName = queries[i]
         print "=" * 50
-        print "Query {}: {}".format(numCandidate, i, queryName)
+        print "Query {}: {}".format(i, queryName)
         if numCandidate > 0:
             queryDir = os.path.join(DATA_DIR, queryName.rsplit('_', 1)[0])
             query = np.array(Image.open(os.path.join(queryDir, queryName)))
