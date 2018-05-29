@@ -179,6 +179,7 @@ def main():
     candidates = util.generate_candidates(bucketsOfBands, H_Q, numBands)
 
     # statistics
+    numQueries = len(queries)
     positive_count = 0
     success_count = 0
     numCandidates = []
@@ -197,10 +198,9 @@ def main():
             except ValueError:
                 print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queryName)
     print "=" * 50
-    # assume 100 sample queries
-    print "{}% of images have candidates".format(1.0 * positive_count)
+    print "{}% of images have candidates".format(1.0 * positive_count / numQueries)
     print "Average number of candidates {}".format(np.mean(numCandidates))
-    print "Original found in candidates for {}% of images".format(1.0 * success_count)
+    print "Original found in candidates for {}% of images".format(1.0 * success_count / numQueries)
 
     # generate batches for Siamese evaluation
     print "Generating batches..."
