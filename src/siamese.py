@@ -296,7 +296,7 @@ def predict_data_file(model, file_path, FLAGS):
     predictions = model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
     print "Done predicting over {} example pairs.".format(len(predictions))
     assert len(predictions) == len(y)
-    tn, fp, fn, tp = confusion_matrix(y, np.around(predictions))
+    tn, fp, fn, tp = confusion_matrix(y, np.around(predictions)).ravel()
     return tn, fp, fn, tp, len(y)
 
 def predict(model, FLAGS):
