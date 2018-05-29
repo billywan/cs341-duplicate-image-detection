@@ -184,7 +184,7 @@ def main():
     for i, candidate in enumerate(candidates):
         numCandidate = len(candidate)
         queryName = queries[i]
-        print "Found {} candidates for query {}: {}, e.g. {}".format(numCandidate, i, queryName, random.sample(candidate, 5))
+        print "Found {} candidates for query {}: {}".format(numCandidate, i, queryName)
         if numCandidate > 0:
             positive_count += 1
             numCandidates.append(numCandidate)
@@ -206,20 +206,23 @@ def main():
     X1 = []
     X2 = []
     y = []
-    for i, candidate in enumerate(candidates):
-        numCandidate = len(candidate)
+    for i, candidateList in enumerate(candidates):
+        numCandidate = len(candidateList)
         queryName = queries[i]
-        print "Found {} candidates for query {}: {}, e.g. {}".format(numCandidate, i, queryName, random.sample(candidate, 5))
+        print "=" * 50
+        print "Query {}: {}".format(numCandidate, i, queryName)
         if numCandidate > 0:
             queryDir = os.path.join(DATA_DIR, queryName.rsplit('_', 1)[0])
             query = np.array(Image.open(os.path.join(queryDir, queryName)))
-            for candidateIdx in candidate:
+            for candidateIdx in candidateList:
                 # get candidate submission dir name
-                submissionDir = os.path.join(DATA_DIR, submissionList[candidateIdx])
-                submission = sorted(os.listdir(submissionDir))[0]
-                X1.append(np.array(Image.open(os.path.join(submissionDir, submission))))
+                candidateStem = submissionList[candidateIdx]
+                candidateDir = os.path.join(DATA_DIR, candidateStem)
+                candidate = sorted(os.listdir(candidateDir))[0]
+                print "Candidate: {}".format(candidate)
+                X1.append(np.array(Image.open(os.path.join(candidateDir, candidate))))
                 X2.append(query)
-                if submissionDir in queryName:
+                if candidateStem in queryName:
                     print "Original found in candidates for query {}: {}".format(i, queryName)
                     y.append(1.0)
                 else:
