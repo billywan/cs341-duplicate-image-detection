@@ -125,7 +125,7 @@ def main():
             help='Specify path for LSH parameters')
     parser.add_argument('--input', dest='input', nargs='?', default='../data',
             help='Specify path for LSH processed input data')
-    parser.add_argument('--output', dest='output',
+    parser.add_argument('--output', dest='output', required=True,
             help='Specify filename for generated candidate batches, relative to this file')
     (options, args) = parser.parse_known_args()
 
