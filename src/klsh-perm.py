@@ -1,9 +1,7 @@
 '''
-Script to perform Kernelized Locality Sensitive Hashing with the "bands" technique
+Script to perform Kernelized Locality Sensitive Hashing and nearest neighbor lookup via random permutations
 Assumes input and query gist vectors have already been computed
-Outputs generated query and candidate batches for Siamese network
-
-Some code based on https://github.com/jakevdp/klsh
+Some code based on https://github.com/jakevdp/klsh and https://github.com/emchristiansen/CharikarLSH
 '''
 
 import os
@@ -13,7 +11,6 @@ import random
 
 import numpy as np
 import pickle
-from PIL import Image
 from sklearn.metrics.pairwise import rbf_kernel
 
 import util
@@ -117,23 +114,19 @@ def main():
             help='amount of data to use when approximating the data distribution in the kernel subspace (p in paper).')
     parser.add_argument('-t', dest='t', nargs='?', default=30, type=int,
             help='number of random objects to use when choosing kernel-space hyperplanes (t in paper)')
-    parser.add_argument('-b', dest='b', nargs='?', default=128, type=int,
+    parser.add_argument('-b', dest='b', nargs='?', default=50, type=int,
             help='number of hash bits (number of hash function to create, b in paper)')
-    parser.add_argument('-r', dest='r', nargs='?', default=8, type=int,
-            help='number of columns (rows as described in 246) per band, shoud divide b evenly')
+    parser.add_argument('-np', dest='np', nargs='?', default=250, type=int,
+            help='number of permutations in nearest neighbor search. For epsilon-approx, use 2n^(1/(1+epsilon)) permutations')
     parser.add_argument('--param', dest='param', nargs='?', default='../param',
             help='Specify path for LSH parameters')
     parser.add_argument('--input', dest='input', nargs='?', default='../data',
             help='Specify path for LSH processed input data')
-    parser.add_argument('--output', dest='output', required=True,
-            help='Specify filename for generated candidate batches, relative to this file')
     (options, args) = parser.parse_known_args()
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
     INPUT_DIR = os.path.join(PROJECT_DIR, options.input)
-    DATA_DIR = "/mnt/data/photoshopbattle_images"
-    BATCH_SIZE = 2000
 
     if os.path.exists(PARAM_DIR):
         print "Found existing parameters, loading..."
@@ -170,23 +163,19 @@ def main():
     print "Hashing query gist vectors..."
     # [q, b]
     H_Q = klsh.compute_hash_table(np.array(Q))
-
     # nearest neighbor search
-    numBands = options.b / options.r
-    print "Hashing database LSH bits into buckets..."
-    bucketsOfBands = util.generate_buckets(H, numBands)
-    print "Hashing query LSH bits into buckets and generating candidates..."
-    candidates = util.generate_candidates(bucketsOfBands, H_Q, numBands)
-
+    print "Permuting hash table..."
+    permutations = util.generate_permutations(H, options.np)
+    print "Searching for query and generating candidates..."
+    candidates = util.lookup(permutations, H_Q)
     # statistics
-    numQueries = len(queries)
     positive_count = 0
     success_count = 0
     numCandidates = []
     for i, candidate in enumerate(candidates):
         numCandidate = len(candidate)
         queryName = queries[i]
-        print "Found {} candidates for query {}: {}".format(numCandidate, i, queryName)
+        print "Found {} candidates for query {}: {}, e.g. {}".format(numCandidate, i, queryName, random.sample(candidate, 5))
         if numCandidate > 0:
             positive_count += 1
             numCandidates.append(numCandidate)
@@ -198,48 +187,10 @@ def main():
             except ValueError:
                 print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queryName)
     print "=" * 50
-    print "{}% of images have candidates".format(100.0 * positive_count / numQueries)
+    # assume 100 sample queries
+    print "{}% of images have candidates".format(1.0 * positive_count)
     print "Average number of candidates {}".format(np.mean(numCandidates))
-    print "Original found in candidates for {}% of images".format(100.0 * success_count / numQueries)
-
-    # generate batches for Siamese evaluation
-    print "Generating batches..."
-    X1 = []
-    X2 = []
-    y = []
-    batchCounter = 0
-    fileStem = os.path.join(PROJECT_DIR, options.output)
-    for i, candidateList in enumerate(candidates):
-        numCandidate = len(candidateList)
-        queryName = queries[i]
-        print "=" * 50
-        print "Query {}: {}".format(i, queryName)
-        if numCandidate > 0:
-            queryDir = os.path.join(DATA_DIR, queryName.rsplit('_', 1)[0])
-            query = np.array(Image.open(os.path.join(queryDir, queryName)))
-            for candidateIdx in candidateList:
-                # get candidate submission dir name
-                candidateStem = submissionList[candidateIdx]
-                candidateDir = os.path.join(DATA_DIR, candidateStem)
-                candidate = sorted(os.listdir(candidateDir))[0]
-                print "Candidate: {}".format(candidate)
-                X1.append(np.array(Image.open(os.path.join(candidateDir, candidate))))
-                X2.append(query)
-                if candidateStem in queryName:
-                    print "Original found in candidates for query {}: {}".format(i, queryName)
-                    y.append(1.0)
-                else:
-                    y.append(0.0)
-                if len(X1) == BATCH_SIZE:
-                    print "Dumping batch {}...".format(batchCounter)
-                    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
-                    del X1[:]
-                    del X2[:]
-                    del y[:]
-                    batchCounter += 1
-    print "Dumping final batch..."
-    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
-
+    print "Original found in candidates for {}% of images".format(1.0 * success_count)
 
 if __name__ == "__main__":
     main()

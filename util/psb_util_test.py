@@ -23,21 +23,29 @@ import pickle
 import os
 import sys
 from keras.preprocessing import image
-from keras.applications.vgg16 import preprocess_input
+from keras.applications.vgg16 import preprocess_input #resnet uses same preprocess_input method as vgg16 & vgg19.
 import numpy as np
 import random
 
 DATA_DIR = "/Users/EricX/Desktop/CS341/data_batches"
 
-def load_data():
-    data_list = []
-    for fn in os.listdir(DATA_DIR):
-        with open(os.path.join(DATA_DIR, fn), 'rb') as handle:
-            data_dict = pickle.load(handle)
-            for k, v in data_dict.items():
-                print('%s: ' % k, v.shape)
-                data_list.append(data_dict)
-    return tuple(data_list)
+
+
+
+def load_data_file(file_path, expect_label=False):
+    print('\nLoading file {}...'.format(file_path))
+    with open(file_path, 'rb') as handle:
+        data_dict = pickle.load(handle)
+        X0, X1, y = data_dict['X1'], data_dict['X2'], None
+        if expect_label:
+            y = data_dict['y']
+            y.astype(np.float32)
+        X0, X1 = X0.astype(np.float32), X1.astype(np.float32)
+        #X0, X1, y = unison_shuffled_data(X0, X1, y)
+        #print(X0.shape, X1.shape, y.shape)
+        #print('Preprocessing input...')
+        X0, X1 = preprocess_input(X0), preprocess_input(X1)
+    return [X0, X1], y
 
 def unison_shuffled_data(a, b, c):
     assert a.shape[0] == b.shape[0] 
@@ -45,12 +53,15 @@ def unison_shuffled_data(a, b, c):
     p = np.random.permutation(a.shape[0])
     return a[p], b[p], c[p]
 
-def batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches", batch_size=50):
-    data_files = [file for file in os.listdir(data_dir) if file.startswith('data_batch_')]
+def batch_generator(data_dir="/Users/EricX/Desktop/CS341/data_batches", batch_size=50, shuffle_files=True):
+    data_files = [file for file in sorted(os.listdir(data_dir)) if 'data_batch_' in file]
+    # if shuffle_files:
+    #     random.shuffle(data_files)
     while True:
-        random.shuffle(data_files)
+        if shuffle_files:
+            random.shuffle(data_files)
         for file in data_files:
-            print('\nLoading file {}\n'.format(file))
+            print('\nLoading file {}'.format(file))
             with open(os.path.join(data_dir, file), 'rb') as handle:
                 data_dict = pickle.load(handle)
                 X0, X1, y = data_dict['X1'], data_dict['X2'], data_dict['y']
