@@ -232,7 +232,8 @@ def main():
                     y.append(0.0)
                 if len(X1) == BATCH_SIZE:
                     print "Dumping batch {}...".format(batchCounter)
-                    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
+                    with open(fileStem + "_" + str(batchCounter), 'wb') as file:
+                        pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, file)
                     del X1[:]
                     del X2[:]
                     del y[:]
