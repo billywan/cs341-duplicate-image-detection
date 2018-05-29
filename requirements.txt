@@ -8,3 +8,4 @@ tensorflow-gpu
 keras
 matplotlib
 tqdm
+seaborn

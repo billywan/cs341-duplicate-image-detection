@@ -180,7 +180,7 @@ quiet_logs(sc)
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(PROJECT_DIR, "data")
-DISK_DIR = "/mnt/data"
+DISK_DIR = "/mnt/data2"
 OUTPUT_DIR = os.path.join(DISK_DIR, "photoshopbattle_images")
 COL_NAMES = ['timestamp', 'user_id', 'subreddit_name', 'comment_fullname', 'comment_body', 'parent_fullname', 'post_fullname']
 # for now don't download .gif and .gifv (mp4) files

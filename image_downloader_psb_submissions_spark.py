@@ -70,6 +70,8 @@ def validate_imgur_no_ext_link(link_tuple):
 
 def download_one(link_tuple):
     link_type, post_id, link = link_tuple
+    if link == "http://i.imgur.com/ET4VfDd.jpg":
+        return False
     download_dir = os.path.join(OUTPUT_DIR, post_id)
     make_dir(download_dir)
     msg = "Downloading {} of type {} with post id {}".format(link, link_type, post_id)
@@ -154,7 +156,7 @@ quiet_logs(sc)
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(PROJECT_DIR, "data")
-OUTPUT_DIR = os.path.join("/mnt/data", "photoshopbattle_images")
+OUTPUT_DIR = os.path.join("/mnt/data2", "photoshopbattle_images")
 COL_NAMES = ['timestamp', 'user_id', 'subreddit_name', 'post_fullname', 'post_type', 'post_title', 'post_target_url', 'post_body']
 # for now don't download .gif and .gifv (mp4) files
 IMAGE_FORMATS = ['png', 'jpg', 'jpeg']

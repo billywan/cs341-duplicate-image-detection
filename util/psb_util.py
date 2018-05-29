@@ -36,10 +36,6 @@ def load_data():
         print('%s: ' % k, v.shape)
         data_list.append(data_dict)
   return data_list
-
-
-
-def batch_generator():
   
 
 if not os.path.exists(DATA_DIR):

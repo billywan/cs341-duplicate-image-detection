@@ -29,21 +29,22 @@ import shutil
 import sys
 
 # Some constants
-DISK_DIR = "/mnt/data"
+DISK_DIR = "/mnt/data2"
 DATA_DIR = os.path.join(DISK_DIR, "photoshopbattle_images")
 OUTPUT_DIR = os.path.join(DISK_DIR, "data_batches")
 
-BATCH_SIZE = 5000
+BATCH_SIZE = 2000
 IMG_SIZE = 224, 224
-SCORE_POS = 1
-SCORE_INT = 0.5
-SCORE_NEG = 0
+SCORE_POS = np.float32(1.0)
+SCORE_INT = np.float32(0.5)
+SCORE_NEG = np.float32(0.0)
 
 result_counter = 0
 batch_counter = 0
 _X1 = []
 _X2 = []
 _y = []
+
 
 def make_dir(dir_name):
     if os.path.exists(dir_name):
@@ -52,12 +53,17 @@ def make_dir(dir_name):
     print("Creating new folder at {}".format(dir_name))
     os.makedirs(dir_name)
 
+# Return euclidean distance bewteen two numpy array
+def calculateEuclideanDist(a1, a2):
+	return np.sum((a1-a2)**2)
+
 # Open and resize images and save as np array
 def resizeOne(file_path):
 	try:
-		img = Image.open(file_path)
-		processed_img = np.array(img.resize(IMG_SIZE, Image.ANTIALIAS))
+		img = Image.open(file_path)		
+		processed_img = np.array(img.resize(IMG_SIZE, Image.ANTIALIAS)).astype(np.float32)
 		return True, processed_img
+		
 	except:
 		print("Unable to open image at {} for unknwon reason".format(file_path))
 		return False, None
@@ -68,13 +74,15 @@ def resizeImg(dirName, fileList):
 	comments_fn = fileList[1:]
 
 	# Resize images and save as np array
-	try:
-		submission_img = np.array(Image.open(os.path.join(dirName, submission_fn)).resize(IMG_SIZE, Image.ANTIALIAS))
-		comment_imgs = [np.array(Image.open(os.path.join(dirName, comment_fn)).resize(IMG_SIZE, Image.ANTIALIAS)) for comment_fn in comments_fn]
-		return True, submission_img, comment_imgs
-	except:
-		print("Unable to open image in {} for unknown reason".format(dirName))
-		return False, None, None
+	submission_succeed, submission_img = resizeOne(os.path.join(dirName,submission_fn))
+	comment_imgs = []
+	comments_succeed = False
+	for fn in comments_fn:
+		succeed, comment_img = resizeOne(os.path.join(dirName,fn))
+		comments_succeed = comments_succeed or succeed
+		if succeed:
+			comment_imgs.append(comment_img)
+	return submission_succeed and comments_succeed, submission_img, comment_imgs
 
 # Pack data as dictionary
 def writeOutput():
@@ -102,6 +110,7 @@ if not os.path.exists(DATA_DIR):
 	sys.exit("Directory photoshopbattle_images does not exists. Ending...")
 make_dir(OUTPUT_DIR)
 
+
 # Main Logic
 # Loop through each subdirectory (corresponding to submission and comment images with the same post_id)
 for dirName, subDirList, fileList in os.walk(DATA_DIR):
@@ -113,9 +122,14 @@ for dirName, subDirList, fileList in os.walk(DATA_DIR):
 		writeOutput()
 		cleanUp()
 
-    # Filter out post_ids without comments
+    # Filter file list
 	if len(fileList) == 0 or len(fileList) == 1:
 		continue
+	# Filter and sort fileList
+	fileList = list(filter(lambda fn: fn.endswith(".jpg"), fileList))
+	if len(fileList) == 0 or len(fileList) == 1:
+		continue
+	fileList.sort()
 
 	succeeded, submission_img, comment_imgs = resizeImg(dirName, fileList)
 	
@@ -124,13 +138,11 @@ for dirName, subDirList, fileList in os.walk(DATA_DIR):
 	# Filter out images without 3 dimensions
 	if np.ndim(submission_img) != 3 or submission_img.shape[2] != 3:
 		continue
-
 	comment_imgs = list(filter(lambda x: np.ndim(x) == 3 and x.shape[2] == 3, comment_imgs))
 	
 	num_comments = len(comment_imgs)
-
 	if num_comments == 1:
-	# Generate only (s, c, 1) pair
+		# Generate only (s, c, 1) pair
 		_X1.append(submission_img)
 		_X2.append(comment_imgs[0])
 		_y.append(SCORE_POS)
@@ -158,12 +170,17 @@ for dirName, subDirList, fileList in os.walk(DATA_DIR):
 			_X2.append(comment_imgs[i2])
 			_y.append(SCORE_INT)
 			result_counter += 1
+			
 	# Generate (s, _, 0) pair
 	for i in range(num_comments):
 		while True:
-		# Randomly sample a image from photoshopbattle_images
+			# Randomly sample a image from photoshopbattle_images
 			rand_dir = os.path.join(DATA_DIR, random.choice(os.listdir(DATA_DIR)))
-			rand_file_path = os.path.join(rand_dir, os.listdir(rand_dir)[0])
+			if not os.path.isdir(rand_dir) or len(os.listdir(rand_dir))==0:
+				continue
+			fileList = os.listdir(rand_dir)
+			fileList.sort()
+			rand_file_path = os.path.join(rand_dir, fileList[0])
 			succeeded, rand_img = resizeOne(rand_file_path)
 			if succeeded and np.ndim(rand_img)==3 and rand_img.shape[2]==3:
 				_X1.append(submission_img)
