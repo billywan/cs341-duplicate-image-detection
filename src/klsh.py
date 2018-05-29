@@ -205,43 +205,43 @@ def main():
     print "Original found in candidates for {}% of images".format(100.0 * success_count / numQueries)
 
     # generate batches for Siamese evaluation
-    # print "Generating batches..."
-    # X1 = []
-    # X2 = []
-    # y = []
-    # batchCounter = 0
-    # fileStem = os.path.join(PROJECT_DIR, options.output)
-    # for i, candidateList in enumerate(candidates):
-    #     numCandidate = len(candidateList)
-    #     queryName = queries[i]
-    #     print "=" * 50
-    #     print "Query {}: {}".format(i, queryName)
-    #     if numCandidate > 0:
-    #         queryDir = os.path.join(DATA_DIR, queryName.rsplit('_', 1)[0])
-    #         query = np.array(Image.open(os.path.join(queryDir, queryName)))
-    #         for candidateIdx in candidateList:
-    #             # get candidate submission dir name
-    #             candidateStem = submissionList[candidateIdx]
-    #             candidateDir = os.path.join(DATA_DIR, candidateStem)
-    #             candidate = sorted(os.listdir(candidateDir))[0]
-    #             print "Candidate: {}".format(candidate)
-    #             X1.append(np.array(Image.open(os.path.join(candidateDir, candidate))))
-    #             X2.append(query)
-    #             if candidateStem in queryName:
-    #                 print "Original found in candidates for query {}: {}".format(i, queryName)
-    #                 y.append(1.0)
-    #             else:
-    #                 y.append(0.0)
-    #             if len(X1) == BATCH_SIZE:
-    #                 print "Dumping batch {}...".format(batchCounter)
-    #                 with open(fileStem + "_" + str(batchCounter), 'wb') as file:
-    #                     pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, file)
-    #                 del X1[:]
-    #                 del X2[:]
-    #                 del y[:]
-    #                 batchCounter += 1
-    # print "Dumping final batch..."
-    # pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
+    print "Generating batches..."
+    X1 = []
+    X2 = []
+    y = []
+    batchCounter = 0
+    fileStem = os.path.join(PROJECT_DIR, options.output)
+    for i, candidateList in enumerate(candidates):
+        numCandidate = len(candidateList)
+        queryName = queries[i]
+        print "=" * 50
+        print "Query {}: {}".format(i, queryName)
+        if numCandidate > 0:
+            queryDir = os.path.join(DATA_DIR, queryName.rsplit('_', 1)[0])
+            query = np.array(Image.open(os.path.join(queryDir, queryName)))
+            for candidateIdx in candidateList:
+                # get candidate submission dir name
+                candidateStem = submissionList[candidateIdx]
+                candidateDir = os.path.join(DATA_DIR, candidateStem)
+                candidate = sorted(os.listdir(candidateDir))[0]
+                print "Candidate: {}".format(candidate)
+                X1.append(np.array(Image.open(os.path.join(candidateDir, candidate))))
+                X2.append(query)
+                if candidateStem in queryName:
+                    print "Original found in candidates for query {}: {}".format(i, queryName)
+                    y.append(1.0)
+                else:
+                    y.append(0.0)
+                if len(X1) == BATCH_SIZE:
+                    print "Dumping batch {}...".format(batchCounter)
+                    with open(fileStem + "_" + str(batchCounter), 'wb') as file:
+                        pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, file)
+                    del X1[:]
+                    del X2[:]
+                    del y[:]
+                    batchCounter += 1
+    print "Dumping final batch..."
+    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
 
 
 if __name__ == "__main__":
