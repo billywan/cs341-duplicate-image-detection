@@ -198,9 +198,9 @@ def main():
             except ValueError:
                 print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queryName)
     print "=" * 50
-    print "{}% of images have candidates".format(1.0 * positive_count / numQueries)
+    print "{}% of images have candidates".format(100.0 * positive_count / numQueries)
     print "Average number of candidates {}".format(np.mean(numCandidates))
-    print "Original found in candidates for {}% of images".format(1.0 * success_count / numQueries)
+    print "Original found in candidates for {}% of images".format(100.0 * success_count / numQueries)
 
     # generate batches for Siamese evaluation
     print "Generating batches..."
@@ -208,6 +208,7 @@ def main():
     X2 = []
     y = []
     batchCounter = 0
+    fileStem = os.path.join(PROJECT_DIR, options.output)
     for i, candidateList in enumerate(candidates):
         numCandidate = len(candidateList)
         queryName = queries[i]
@@ -231,13 +232,13 @@ def main():
                     y.append(0.0)
                 if len(X1) == BATCH_SIZE:
                     print "Dumping batch {}...".format(batchCounter)
-                    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(os.path.join(PROJECT_DIR, options.output) + "_" + batchCounter, 'wb'))
+                    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
                     del X1[:]
                     del X2[:]
                     del y[:]
                     batchCounter += 1
     print "Dumping final batch..."
-    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(os.path.join(PROJECT_DIR, options.output) + "_" + batchCounter, 'wb'))
+    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
 
 
 if __name__ == "__main__":
