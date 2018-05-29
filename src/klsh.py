@@ -117,7 +117,8 @@ def main():
             help='amount of data to use when approximating the data distribution in the kernel subspace (p in paper).')
     parser.add_argument('-t', dest='t', nargs='?', default=30, type=int,
             help='number of random objects to use when choosing kernel-space hyperplanes (t in paper)')
-    parser.add_argument('-b', dest='b', nargs='?', default=128, type=int,
+    # 192 rows with 8 rows per band: 320 candidates, 50% recall
+    parser.add_argument('-b', dest='b', nargs='?', default=192, type=int,
             help='number of hash bits (number of hash function to create, b in paper)')
     parser.add_argument('-r', dest='r', nargs='?', default=8, type=int,
             help='number of columns (rows as described in 246) per band, shoud divide b evenly')
