@@ -295,9 +295,11 @@ def predict_data_file(model, file_path, FLAGS):
     # At prediction time, no labels are available. We use labels to calculate our own metrics
     predictions = model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
     print "Done predicting over {} example pairs.".format(len(predictions))
-    assert len(predictions) == len(y)
+    numInBatch = len(y)
+    assert len(predictions) == numInBatch
     tn, fp, fn, tp = confusion_matrix(y, np.around(predictions)).ravel()
-    return tn, fp, fn, tp, len(y)
+    print "TN: {}, FP: {}, FN: {}, TP: {}, TOTAL: {}".format(tn, fp, fn, tp, numInBatch)
+    return tn, fp, fn, tp, numInBatch
 
 def predict(model, FLAGS):
     model = compile_model(model, FLAGS)

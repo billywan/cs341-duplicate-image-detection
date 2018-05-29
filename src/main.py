@@ -22,7 +22,7 @@ from keras.models import load_model
 import siamese
 
 
-MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
+MAIN_DIR = "/home/EricX/cs341-duplicate-image-detection" # relative path of the main directory
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
 #MODEL_CHECKPOINT_NAME = 'model_weights.{epoch:02d}-{val_mean_absolute_error:.4f}.hdf5'
 MODEL_CHECKPOINT_NAME = 'model_weights.hdf5'
