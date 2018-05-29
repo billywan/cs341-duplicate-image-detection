@@ -125,7 +125,8 @@ def main():
             help='Specify path for LSH parameters')
     parser.add_argument('--input', dest='input', nargs='?', default='../data',
             help='Specify path for LSH processed input data')
-    parser.add_argument('--output', dest='output', help='Specify filename for generated candidate batches')
+    parser.add_argument('--output', dest='output',
+            help='Specify filename for generated candidate batches, relative to this file')
     (options, args) = parser.parse_known_args()
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -227,7 +228,7 @@ def main():
                     y.append(1.0)
                 else:
                     y.append(0.0)
-    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(options.output, 'wb'))
+    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(os.path.join(PROJECT_DIR, options.output), 'wb'))
 
 
 if __name__ == "__main__":
