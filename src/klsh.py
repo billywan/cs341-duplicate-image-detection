@@ -132,7 +132,7 @@ def main():
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
     INPUT_DIR = os.path.join(PROJECT_DIR, options.input)
-    DATA_DIR = "/mnt/data/photoshopbattle_images"
+    DATA_DIR = "/mnt/data/photoshopbattle_images_samples"
     BATCH_SIZE = 2000
 
     if os.path.exists(PARAM_DIR):
