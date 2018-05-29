@@ -10,6 +10,7 @@ import matplotlib.pyplot
 from matplotlib.pyplot import imshow
 from tqdm import tqdm
 from functools import partial
+from sklearn.metrics import confusion_matrix
 #adding parent/util directory to the system path, so that any file in the util package can be imported
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'util'))
 import psb_util_test as psb_util
@@ -40,7 +41,7 @@ RESNET_MODEL = keras.applications.resnet50.ResNet50(include_top=True, weights='i
 FEAT_LAYERS = ['block4_pool', 'block5_pool']
 SCORE_WEIGHTS = [0.5, 0.5]
 #infer how many dense layers used for prediction
-PREDICTION_DENSE_DIMS = [1024, 1024] 
+PREDICTION_DENSE_DIMS = [1024, 1024]
 
 def get_feat_layers(FLAGS):
     if FLAGS.base_model == "vgg16":
@@ -74,7 +75,7 @@ def get_feat_weights(FLAGS):
 
 
 
-#loss: 0.0720 - acc: 0.9784 - mean_absolute_error: 0.0560 
+#loss: 0.0720 - acc: 0.9784 - mean_absolute_error: 0.0560
 #- val_loss: 0.3495 - val_acc: 0.8894 - val_mean_absolute_error: 0.1477
 #Epoch 38/40
 
@@ -109,17 +110,17 @@ def flatten_dense(feat_tensor, FLAGS, out_dim=1024, activation='relu'):
 def dense_with_bn(feat_tensor, FLAGS, out_dim=1024, activation='relu'):
     kernel_regularizer = regularizers.l2(FLAGS.reg_rate) if FLAGS.reg_rate else None
     feat_tensor = Dense(out_dim, activation = 'linear', kernel_regularizer=kernel_regularizer)(feat_tensor)
-    
+
     if FLAGS.dropout != 0:
         print "dropout is {}".format(FLAGS.dropout)
         feat_tensor = Dropout(FLAGS.dropout)(feat_tensor)
-    
+
     #use bn before activation, just as resnet
     print("Batch Norm {}".format(FLAGS.batch_norm))
     if FLAGS.batch_norm:
         print("Batch Norm True")
         feat_tensor = BatchNormalization()(feat_tensor)
-    
+
     feat_tensor = Activation(activation)(feat_tensor)
 
     return feat_tensor
@@ -189,7 +190,7 @@ def build_model(FLAGS):
     else:
         raise Exception("base_model {} invalid".format(FLAGS.base_model))
     assert len(predictions_by_layer) == len(get_feat_layers(FLAGS))
-    
+
     final_score = aggregate_predictions(FLAGS, predictions_by_layer)
     siamese_model = Model(inputs=[src_in, tar_in], outputs = [final_score], name = 'Similarity_Model')
     siamese_model.summary()
@@ -244,7 +245,7 @@ def train(model, FLAGS):
 
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=4, min_lr=0.00001)
     checkpointer = ModelCheckpoint(filepath=os.path.join(train_dir, MODEL_CHECKPOINT_NAME), monitor='val_mean_absolute_error', verbose=1, save_best_only=True, save_weights_only=True)
-    #checkpointer.set_model(model) 
+    #checkpointer.set_model(model)
     loss_history = model.fit_generator(train_batch_generator,
                                         validation_data = test_batch_generator,
                                         steps_per_epoch = FLAGS.steps_per_epoch,
@@ -253,7 +254,7 @@ def train(model, FLAGS):
                                         verbose = True,
                                         max_queue_size=1,
                                         callbacks = [reduce_lr, checkpointer])
-    
+
     #model.save_weights(os.path.join(train_dir, MODEL_CHECKPOINT_NAME))
 
     loaded_model = build_model(FLAGS)
@@ -289,38 +290,55 @@ def train(model, FLAGS):
 
 def predict_data_file(model, file_path, FLAGS):
     print "Predicting data in {} ...".format(file_path)
-    data = psb_util.load_data_file(file_path, expect_label=False)
-    [X1, X2], _ = data # At prediction time, no labels are available
+    data = psb_util.load_data_file(file_path, expect_label=True)
+    [X1, X2], y = data
+    # At prediction time, no labels are available. We use labels to calculate our own metrics
     predictions = model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
     print "Done predicting over {} example pairs.".format(len(predictions))
-    return predictions
+    assert len(predictions) == len(y)
+    tn, fp, fn, tp = confusion_matrix(y, np.around(predictions))
+    return tn, fp, fn, tp, len(y)
 
 def predict(model, FLAGS):
     model = compile_model(model, FLAGS)
     #eval_batch_generator = psb_util.batch_generator(data_dir=FLAGS.eval_data_dir, batch_size=FLAGS.batch_size)
     #[X1, X2], y = next(eval_batch_generator)
 
-    predictions = {}
+    total_tn = 0
+    total_fp = 0
+    total_fn = 0
+    total_tp = 0
+    numExamples = 0
     if os.path.isdir(FLAGS.eval_data_path):
         data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(FLAGS.eval_data_path)]
         for file in data_files:
-            predictions[file] = predict_data_file(model, file, FLAGS)
-    else: 
-        predictions[FLAGS.eval_data_path] = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
+            tn, fp, fn, tp, batchExamples = predict_data_file(model, file, FLAGS)
+            total_tn += tn
+            total_fp += fp
+            total_fn += fn
+            total_tp += tp
+            numExamples += batchExamples
+    else:
+        total_tn, total_fp, total_fn, total_tp, numExamples = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
 
-    for k, v in predictions.iteritems():
-        print "predicted {num} examples in {file}".format(num=v.shape, file=k)
+    print "Total Examples: {}".format(numExamples)
+    print "True Negatives: {}".format(1.0 * total_tn / numExamples)
+    print "False Positives: {}".format(1.0 * total_fp / numExamples)
+    print "False Negatives: {}".format(1.0 * total_fn / numExamples)
+    print "True Positives: {}".format(1.0 * total_tp / numExamples)
+    print "Precision: {}".format(1.0 * total_tp / (total_tp + total_fp))
+    print "Recall: {}".format(1.0 * total_tp / (total_tp + total_fn))
     print "Prediction finished."
-    
+
     #dump the predictions into a file.
-    
+
     # print "predictions[:30]", predictions[:30]
     # print "y[:30]", y[:30]
-    # predictions = siamese_model.predict_generator(test_batch_generator, 
-    #                                                 steps=21, 
-    #                                                 max_queue_size=1, 
-    #                                                 workers=4, 
-    #                                                 use_multiprocessing=True, 
+    # predictions = siamese_model.predict_generator(test_batch_generator,
+    #                                                 steps=21,
+    #                                                 max_queue_size=1,
+    #                                                 workers=4,
+    #                                                 use_multiprocessing=True,
     #                                                 verbose=1)
 
 
@@ -341,7 +359,7 @@ def eval(model, FLAGS):
         data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(FLAGS.eval_data_path)]
         for file in data_files:
             evaluations[file] = eval_data_file(model, file, FLAGS)
-    else: 
+    else:
         print "You supplied a single file for evaluation"
         evaluations[FLAGS.eval_data_path] = eval_data_file(model, FLAGS.eval_data_path, FLAGS)
 
@@ -381,15 +399,15 @@ def main():
                                                 steps_per_epoch = FLAGS.steps_per_epoch,
                                                 validation_steps = validation_steps,
                                                 epochs = FLAGS.num_epochs,
-                                                verbose = True, 
-                                                callbacks=[reduce_lr]) 
-                                                
+                                                verbose = True,
+                                                callbacks=[reduce_lr])
+
     # t0 = time.time()
-    # predictions = siamese_model.predict_generator(test_batch_generator, 
-    #                                                 steps=21, 
-    #                                                 max_queue_size=10, 
-    #                                                 workers=4, 
-    #                                                 use_multiprocessing=True, 
+    # predictions = siamese_model.predict_generator(test_batch_generator,
+    #                                                 steps=21,
+    #                                                 max_queue_size=10,
+    #                                                 workers=4,
+    #                                                 use_multiprocessing=True,
     #                                                 verbose=1)
     # t1 = time.time()
     # print("time taken {}".format(t1-t0))
