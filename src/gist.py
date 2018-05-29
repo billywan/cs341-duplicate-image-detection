@@ -13,7 +13,7 @@ from PIL import Image
 
 def main():
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-    DATA_DIR = "/mnt/data/photoshopbattle_images_preprocessed"
+    DATA_DIR = "/mnt/data/photoshopbattle_images_samples"
     INPUT_DIR = os.path.join(PROJECT_DIR, '../data')
 
     skipDirs = []
