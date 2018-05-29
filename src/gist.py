@@ -13,7 +13,7 @@ from PIL import Image
 
 def main():
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-    DATA_DIR = "/mnt/data/photoshopbattle_images_samples"
+    DATA_DIR = "/mnt/data2/photoshopbattle_images_samples"
     INPUT_DIR = os.path.join(PROJECT_DIR, '../data')
 
     skipDirs = []
@@ -27,6 +27,7 @@ def main():
                 submission = sorted(fileList)[0]
                 # if no parent, skip
                 if submission.count("_") > 1:
+                    print "Skipping {} with files {}".format(dirName, fileList)
                     skipDirs.append(dirName)
                 else:
                     fullPath = os.path.join(dirName, submission)
