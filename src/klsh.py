@@ -133,7 +133,7 @@ def main():
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
     INPUT_DIR = os.path.join(PROJECT_DIR, options.input)
     DATA_DIR = "/mnt/data/photoshopbattle_images"
-    BATCH_OUTPUT_ = "/mnt/data/psb_eval_batch"
+    BATCH_SIZE = 2000
 
     if os.path.exists(PARAM_DIR):
         print "Found existing parameters, loading..."
@@ -207,6 +207,7 @@ def main():
     X1 = []
     X2 = []
     y = []
+    batchCounter = 0
     for i, candidateList in enumerate(candidates):
         numCandidate = len(candidateList)
         queryName = queries[i]
@@ -228,7 +229,15 @@ def main():
                     y.append(1.0)
                 else:
                     y.append(0.0)
-    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(os.path.join(PROJECT_DIR, options.output), 'wb'))
+                if len(X1) == BATCH_SIZE:
+                    print "Dumping batch {}...".format(batchCounter)
+                    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(os.path.join(PROJECT_DIR, options.output) + "_" + batchCounter, 'wb'))
+                    del X1[:]
+                    del X2[:]
+                    del y[:]
+                    batchCounter += 1
+    print "Dumping final batch..."
+    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(os.path.join(PROJECT_DIR, options.output) + "_" + batchCounter, 'wb'))
 
 
 if __name__ == "__main__":
