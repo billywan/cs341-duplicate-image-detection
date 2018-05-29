@@ -134,7 +134,7 @@ def main():
     PARAM_DIR = os.path.join(PROJECT_DIR, options.param)
     INPUT_DIR = os.path.join(PROJECT_DIR, options.input)
     DATA_DIR = "/mnt/data2/photoshopbattle_images_samples"
-    BATCH_SIZE = 4000
+    BATCH_SIZE = 10000
 
     if os.path.exists(PARAM_DIR):
         print "Found existing parameters, loading..."
