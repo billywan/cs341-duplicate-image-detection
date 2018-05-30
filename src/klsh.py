@@ -241,7 +241,7 @@ def main():
                     del y[:]
                     batchCounter += 1
     print "Dumping final batch..."
-    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
+    pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, open(fileStem + "_" + str(batchCounter), 'wb'))
 
 
 if __name__ == "__main__":
