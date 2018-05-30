@@ -1,7 +1,7 @@
 '''
 Usage:
     Train: omitted, you guys shouldn't train a model yourself
-    Evaluate: python src/main.py --mode=eval --EVAL_DATA_PATH=<default to /mnt/data2/data_batches_01_12/test/> --base_model=<vgg16/resnet50> --experiment_name=<path to experiment folder> --gpu=4
+    Evaluate: python src/main.py --mode=eval --eval_data_path=<default to /mnt/data2/data_batches_01_12/test/> --base_model=<vgg16/resnet50> --experiment_name=<path to experiment folder> --gpu=4
     Predict: use --mode=predict, all else equal
 '''
 

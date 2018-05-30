@@ -117,10 +117,11 @@ def main():
             help='amount of data to use when approximating the data distribution in the kernel subspace (p in paper).')
     parser.add_argument('-t', dest='t', nargs='?', default=30, type=int,
             help='number of random objects to use when choosing kernel-space hyperplanes (t in paper)')
-    # 192 rows with 8 rows per band: 320 candidates, 50% recall
-    parser.add_argument('-b', dest='b', nargs='?', default=192, type=int,
+    # all: 192 rows with 8 rows per band: 320 candidates, 50% recall
+    # bin12: 180 rows with 9 rows per band: 118 candidates, 63% recall
+    parser.add_argument('-b', dest='b', nargs='?', default=180, type=int,
             help='number of hash bits (number of hash function to create, b in paper)')
-    parser.add_argument('-r', dest='r', nargs='?', default=8, type=int,
+    parser.add_argument('-r', dest='r', nargs='?', default=9, type=int,
             help='number of columns (rows as described in 246) per band, shoud divide b evenly')
     parser.add_argument('--param', dest='param', nargs='?', default='../param',
             help='Specify path for LSH parameters')
@@ -240,7 +241,7 @@ def main():
                     del y[:]
                     batchCounter += 1
     print "Dumping final batch..."
-    pickle.dump({'X1' : X1, 'X2' : X2, 'y' : y}, open(fileStem + "_" + str(batchCounter), 'wb'))
+    pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, open(fileStem + "_" + str(batchCounter), 'wb'))
 
 
 if __name__ == "__main__":
