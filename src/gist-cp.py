@@ -17,7 +17,7 @@ def main():
     DATA_DIR = "/mnt/data2/photoshopbattle_images_samples"
     INPUT_DIR = os.path.join(PROJECT_DIR, '../data')
 
-    if os.path.exists(os.path.join(INPUT_DIR, 'X.npy')) or os.path.exists(os.path.join(INPUT_DIR, 'Q.npy')):
+    if os.path.exists(os.path.join(INPUT_DIR, 'X-cp.npy')) or os.path.exists(os.path.join(INPUT_DIR, 'Q-cp.npy')):
         print "Input/query gist vectors already exist, skipping..."
     else:
         X = []
@@ -53,14 +53,14 @@ def main():
                         print "Unable to open image {}".format(fullPath)
         X = np.array(X)
         print "Saving input gist vectors and submission list..."
-        np.save(os.path.join(INPUT_DIR, 'X.npy'), X)
-        with open(os.path.join(INPUT_DIR, 'candidates'), 'wb') as fileOut:
+        np.save(os.path.join(INPUT_DIR, 'X-cp.npy'), X)
+        with open(os.path.join(INPUT_DIR, 'candidates-cp'), 'wb') as fileOut:
             pickle.dump(candidateList, fileOut)
 
         Q = np.array(Q)
         print "Saving query gist vectors and query list..."
-        np.save(os.path.join(INPUT_DIR, 'Q.npy'), Q)
-        with open(os.path.join(INPUT_DIR, 'queries'), 'wb') as fileOut:
+        np.save(os.path.join(INPUT_DIR, 'Q-cp.npy'), Q)
+        with open(os.path.join(INPUT_DIR, 'queries-cp'), 'wb') as fileOut:
             pickle.dump(queryList, fileOut)
 
 
