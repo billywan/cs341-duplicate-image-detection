@@ -1,5 +1,6 @@
 '''
 Script to compute gist vectors for input images and save to disk
+Here, input/candidate is parent, queries are children.
 '''
 
 import os
