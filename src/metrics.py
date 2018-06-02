@@ -69,7 +69,7 @@ def main():
                         hits += 1
                 precision = 1.0 * hits / 3
                 print "Precision at 3: {}".format(precision)
-                HR.append(hitRate)
+                HR.append(precision)
     print "Mean Reciprocal Rank: {}".format(np.mean(MRR))
     print "Mean Precision at 3: {}".format(np.mean(HR))
 
