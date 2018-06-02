@@ -299,7 +299,7 @@ def predict_data_file(model, file_path, FLAGS):
     assert len(predictions) == numInBatch
     tn, fp, fn, tp = confusion_matrix(y, np.around(predictions)).ravel()
     print "TN: {}, FP: {}, FN: {}, TP: {}, TOTAL: {}".format(tn, fp, fn, tp, numInBatch)
-    return tn, fp, fn, tp, numInBatch
+    return tn, fp, fn, tp, numInBatch, predictions
 
 def predict(model, FLAGS):
     model = compile_model(model, FLAGS)
@@ -311,17 +311,19 @@ def predict(model, FLAGS):
     total_fn = 0
     total_tp = 0
     numExamples = 0
+    predictions = []
     if os.path.isdir(FLAGS.eval_data_path):
-        data_files = [os.path.join(FLAGS.eval_data_path, file) for file in os.listdir(FLAGS.eval_data_path)]
+        data_files = [os.path.join(FLAGS.eval_data_path, file) for file in sorted(os.listdir(FLAGS.eval_data_path))]
         for file in data_files:
-            tn, fp, fn, tp, batchExamples = predict_data_file(model, file, FLAGS)
+            tn, fp, fn, tp, batchExamples, batchPredictions = predict_data_file(model, file, FLAGS)
             total_tn += tn
             total_fp += fp
             total_fn += fn
             total_tp += tp
             numExamples += batchExamples
+            predictions.append(batchPredictions)
     else:
-        total_tn, total_fp, total_fn, total_tp, numExamples = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
+        total_tn, total_fp, total_fn, total_tp, numExamples, predictions = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
 
     print "Total Examples: {}".format(numExamples)
     print "True Negatives: {}".format(1.0 * total_tn / numExamples)
@@ -330,6 +332,9 @@ def predict(model, FLAGS):
     print "True Positives: {}".format(1.0 * total_tp / numExamples)
     print "Precision: {}".format(1.0 * total_tp / (total_tp + total_fp))
     print "Recall: {}".format(1.0 * total_tp / (total_tp + total_fn))
+    predictionPath = "/home/Billy/cs341-duplicate-image-detection/data/predictions.npy"
+    print "Saving predictions {}...".format(predictionPath)
+    np.save(predictionPath, np.array(predictions))
     print "Prediction finished."
     # caution: corner case of endBatch = 0
 
