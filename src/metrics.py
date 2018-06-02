@@ -61,8 +61,8 @@ def main():
             # MRR
             for i, idx in enumerate(sortedIndices):
                 if idx in relIndices:
-                    print "Rank {}".format(i)
-                    MRR.append(1.0 / i)
+                    print "Rank {}".format(i+1)
+                    MRR.append(1.0 / i+1)
                     break
             # Hit Rate
             if options.mode == 'pc':
