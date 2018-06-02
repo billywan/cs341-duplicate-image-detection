@@ -81,6 +81,8 @@ def main():
                 hitRate = 1.0 * hits / numChildren
                 print "Hit Rate at 10: {}".format(hitRate)
                 HR.append(hitRate)
+    print "Mean Reciprocal Rank: {}".format(np.mean(MRR))
+    print "Mean Hit Rate at 10: {}".format(np.mean(HR))    
 
 
 if __name__ == "__main__":
