@@ -1,5 +1,5 @@
 '''
-Script to compute Mean Reciprocal Rank and Hit Rate at 5 given predictions and an index file
+Script to compute Mean Reciprocal Rank and Precision at 3 given predictions and an index file
 
 Predictions is a 2D numpy array, each row contains predictions of a batch.
 NOTE: this is probably not rectangular as the last batch is not a full batch - each element of predictions is actually 2D [10000, 1]
@@ -14,7 +14,7 @@ import numpy as np
 import pickle
 
 def main():
-    parser = argparse.ArgumentParser(description='Compute Mean Reciprocal Rank and Hit Rate at 10')
+    parser = argparse.ArgumentParser(description='Compute Mean Reciprocal Rank and Precision at 3')
     parser.add_argument('-p', dest='predictions', required=True,
             help='the prediction file relative to ../data')
     parser.add_argument('-i', dest='index', required=True,
@@ -61,17 +61,17 @@ def main():
                     print "Rank {}".format(rank)
                     MRR.append(1.0 / rank)
                     break
-            # Hit Rate (only makes sense in cp mode)
+            # Precision at 3
             if options.mode == 'cp':
                 hits = 0
-                for idx in sortedIndices[:5]:
+                for idx in sortedIndices[:3]:
                     if idx in relIndices:
                         hits += 1
-                hitRate = 1.0 * hits / 5
-                print "Hit Rate at 5: {}".format(hitRate)
+                precision = 1.0 * hits / 3
+                print "Precision at 3: {}".format(precision)
                 HR.append(hitRate)
     print "Mean Reciprocal Rank: {}".format(np.mean(MRR))
-    print "Mean Hit Rate at 5: {}".format(np.mean(HR))
+    print "Mean Precision at 3: {}".format(np.mean(HR))
 
 
 if __name__ == "__main__":
