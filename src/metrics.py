@@ -49,9 +49,12 @@ def main():
             if startBatch == endBatch:
                 # within a batch
                 predictionsOfQuery = predictions[startBatch, startBatchIdx:endBatchIdx]
-            else if startBatch == endBatch - 1:
+            elif startBatch == endBatch - 1:
                 # across 2 batches
                 predictionsOfQuery = np.concatenate((predictions[startBatch, startBatchIdx:], predictions[endBatch, :endBatchIdx]))
+            else:
+                print "Impossible! Candidates more than 1 batch."
+                sys.exit()
             # indices that sort in descending order
             sortedIndices = np.argsort(-predictionsOfQuery)
             # MRR
@@ -82,7 +85,7 @@ def main():
                 print "Hit Rate at 10: {}".format(hitRate)
                 HR.append(hitRate)
     print "Mean Reciprocal Rank: {}".format(np.mean(MRR))
-    print "Mean Hit Rate at 10: {}".format(np.mean(HR))    
+    print "Mean Hit Rate at 10: {}".format(np.mean(HR))
 
 
 if __name__ == "__main__":
