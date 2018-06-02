@@ -1,6 +1,8 @@
 '''
 Script to perform Kernelized Locality Sensitive Hashing with the "bands" technique
 Assumes input and query gist vectors have already been computed
+Here, input/candidate is children, queries are parents.
+
 Outputs generated query and candidate batches for Siamese network
 
 Some code based on https://github.com/jakevdp/klsh
@@ -106,10 +108,10 @@ class KLSH():
         return (np.dot(K_input, self.W) > 0).astype(np.uint8)
 
     def save_params(self, dir):
-        np.save(os.path.join(dir, 'W.npy'), self.W)
-        np.save(os.path.join(dir, 'sample.npy'), self.sample)
-        np.save(os.path.join(dir, 'KMean0.npy'), self.KMean0)
-        np.save(os.path.join(dir, 'KMean.npy'), self.KMean)
+        np.save(os.path.join(dir, 'W-cp.npy'), self.W)
+        np.save(os.path.join(dir, 'sample-cp.npy'), self.sample)
+        np.save(os.path.join(dir, 'KMean0-cp.npy'), self.KMean0)
+        np.save(os.path.join(dir, 'KMean-cp.npy'), self.KMean)
 
 def main():
     parser = argparse.ArgumentParser(description='Kernelized Locality Sensitive Hashing')
@@ -139,19 +141,17 @@ def main():
 
     if os.path.exists(PARAM_DIR):
         print "Found existing parameters, loading..."
-        W = np.load(os.path.join(PARAM_DIR, 'W.npy'))
-        sample = np.load(os.path.join(PARAM_DIR, 'sample.npy'))
-        KMean0 = np.load(os.path.join(PARAM_DIR, 'KMean0.npy'))
-        KMean = np.load(os.path.join(PARAM_DIR, 'KMean.npy'))
+        W = np.load(os.path.join(PARAM_DIR, 'W-cp.npy'))
+        sample = np.load(os.path.join(PARAM_DIR, 'sample-cp.npy'))
+        KMean0 = np.load(os.path.join(PARAM_DIR, 'KMean0-cp.npy'))
+        KMean = np.load(os.path.join(PARAM_DIR, 'KMean-cp.npy'))
         klsh = KLSH(W=W, sample=sample, KMean0=KMean0, KMean=KMean)
-        H = np.load(os.path.join(PARAM_DIR, 'H.npy'))
-        submissionList = pickle.load(open(os.path.join(INPUT_DIR, 'submissions'), 'rb'))
+        H = np.load(os.path.join(PARAM_DIR, 'H-cp.npy'))
     else:
         os.mkdir(PARAM_DIR)
-        if os.path.exists(os.path.join(INPUT_DIR, 'X.npy')):
+        if os.path.exists(os.path.join(INPUT_DIR, 'X-cp.npy')):
             print "Found input gist vectors, loading..."
-            X = np.load(os.path.join(INPUT_DIR, 'X.npy'))
-            submissionList = pickle.load(open(os.path.join(INPUT_DIR, 'submissions'), 'rb'))
+            X = np.load(os.path.join(INPUT_DIR, 'X-cp.npy'))
         else:
             print "Existing input gist vectors not found, please compute them first"
             sys.exit()
@@ -159,12 +159,16 @@ def main():
         klsh = KLSH(X, p=options.p, t=options.t, b=options.b)
         klsh.save_params(PARAM_DIR)
         H = klsh.compute_hash_table(np.array(X))
-        np.save(os.path.join(PARAM_DIR, 'H.npy'), H)
+        np.save(os.path.join(PARAM_DIR, 'H-cp.npy'), H)
 
-    if os.path.exists(os.path.join(INPUT_DIR, 'Q.npy')):
+    with open(os.path.join(INPUT_DIR, 'candidates-cp'), 'rb') as fileIn:
+        candidateNames = pickle.load(fileIn)
+
+    if os.path.exists(os.path.join(INPUT_DIR, 'Q-cp.npy')):
         print "Found query gist vectors, loading..."
-        Q = np.load(os.path.join(INPUT_DIR, 'Q.npy')).tolist()
-        queries = pickle.load(open(os.path.join(INPUT_DIR, 'queries'), 'rb'))
+        Q = np.load(os.path.join(INPUT_DIR, 'Q-cp.npy')).tolist()
+        with open(os.path.join(INPUT_DIR, 'queries-cp'), 'rb') as fileIn:
+            queryNames = pickle.load(fileIn)
     else:
         print "Existing query gist vectors not found, please compute them first"
         sys.exit()
@@ -178,31 +182,29 @@ def main():
     print "Hashing database LSH bits into buckets..."
     bucketsOfBands = util.generate_buckets(H, numBands)
     print "Hashing query LSH bits into buckets and generating candidates..."
-    candidates = util.generate_candidates(bucketsOfBands, H_Q, numBands)
+    candidatesForQueries = util.generate_candidates(bucketsOfBands, H_Q, numBands)
 
     # statistics
-    numQueries = len(queries)
+    totalCandidates = len(candidateNames)
+    totalQueries = len(queryNames)
     positive_count = 0
     success_count = 0
     numCandidates = []
-    for i, candidate in enumerate(candidates):
-        numCandidate = len(candidate)
-        queryName = queries[i]
+    for i, candidates in enumerate(candidatesForQueries):
+        numCandidate = len(candidates)
+        queryName = queryNames[i]
         print "Found {} candidates for query {}: {}".format(numCandidate, i, queryName)
         if numCandidate > 0:
             positive_count += 1
             numCandidates.append(numCandidate)
-            try:
-                idx = submissionList.index(queryName.rsplit('_', 1)[0])
-                if idx in candidate:
-                    print "Original found in candidates for query {}: {}".format(i, queryName)
+            for candidateIdx in candidates:
+                if candidateNames[candidateIdx].rsplit('_', 1)[0] in queryName:
                     success_count += 1
-            except ValueError:
-                print "Unexpected error: query {}: {}'s original not found in submission list".format(i, queryName)
+                    print "Found child {} for query {}: {}".format(candidateNames[candidateIdx], i, queryName)
     print "=" * 50
-    print "{}% of images have candidates".format(100.0 * positive_count / numQueries)
+    print "{}% of queries have candidates".format(100.0 * positive_count / totalQueries)
     print "Average number of candidates {}".format(np.mean(numCandidates))
-    print "Original found in candidates for {}% of images".format(100.0 * success_count / numQueries)
+    print "{}% of children found in candidates".format(100.0 * success_count / totalCandidates)
 
     # generate batches for Siamese evaluation
     print "Generating batches..."
@@ -210,38 +212,48 @@ def main():
     X2 = []
     y = []
     batchCounter = 0
+    # each element in index: (startBatch, startBatchIdx, endBatch, endBatchIdx, [relative indices of true candidates])
+    index = []
     fileStem = os.path.join(PROJECT_DIR, options.output)
-    for i, candidateList in enumerate(candidates):
-        numCandidate = len(candidateList)
-        queryName = queries[i]
+    for i, candidates in enumerate(candidatesForQueries):
+        queryName = queryNames[i]
         print "=" * 50
         print "Query {}: {}".format(i, queryName)
-        if numCandidate > 0:
-            queryDir = os.path.join(DATA_DIR, queryName.rsplit('_', 1)[0])
+        startBatch = batchCounter
+        startBatchIdx = len(X1)
+        relIndices = []
+        if len(candidates) > 0:
+            queryDir = os.path.join(DATA_DIR, queryName.rsplit('.', 1)[0])
             query = np.array(Image.open(os.path.join(queryDir, queryName)))
-            for candidateIdx in candidateList:
-                # get candidate submission dir name
-                candidateStem = submissionList[candidateIdx]
+            for j, candidateIdx in enumerate(candidates):
+                # get candidate file
+                candidateName = candidateNames[candidateIdx]
+                candidateStem = candidateName.rsplit('_', 1)[0]
                 candidateDir = os.path.join(DATA_DIR, candidateStem)
-                candidate = sorted(os.listdir(candidateDir))[0]
-                print "Candidate: {}".format(candidate)
-                X1.append(np.array(Image.open(os.path.join(candidateDir, candidate))))
+                print "Candidate: {}".format(candidateName)
+                X1.append(np.array(Image.open(os.path.join(candidateDir, candidateName))))
                 X2.append(query)
                 if candidateStem in queryName:
-                    print "Original found in candidates for query {}: {}".format(i, queryName)
+                    print "Found child {} for query {}: {}".format(candidateName, i, queryName)
                     y.append(1.0)
+                    relIndices.append(j)
                 else:
                     y.append(0.0)
                 if len(X1) == BATCH_SIZE:
                     print "Dumping batch {}...".format(batchCounter)
-                    with open(fileStem + "_" + str(batchCounter), 'wb') as file:
+                    with open(fileStem + "_" + str(batchCounter).zfill(2), 'wb') as file:
                         pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, file)
                     del X1[:]
                     del X2[:]
                     del y[:]
                     batchCounter += 1
+            print "Appending index: ({}, {}, {}, {}, {})".format(startBatch, startBatchIdx, batchCounter, len(X1), relIndices)
+            index.append((startBatch, startBatchIdx, batchCounter, len(X1), relIndices))
     print "Dumping final batch..."
-    pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, open(fileStem + "_" + str(batchCounter), 'wb'))
+    with open(fileStem + "_" + str(batchCounter).zfill(2), 'wb') as file:
+        pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, file)
+    with open(os.path.join(INPUT_DIR, 'index-cp'), 'wb') as file:
+        pickle.dump(index, file)
 
 
 if __name__ == "__main__":

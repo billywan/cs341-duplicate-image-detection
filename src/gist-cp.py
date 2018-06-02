@@ -34,12 +34,13 @@ def main():
                 else:
                     # children as candidates
                     for child in sortedFileList[1:]:
+                        assert child.count("_") > 1
                         childFullPath = os.path.join(dirName, child)
                         print "Computing gist vector for child {}...".format(childFullPath)
                         try:
                             im = Image.open(childFullPath)
                             X.append(leargist.color_gist(im, orientations=(4,4,2)))
-                            candidateList.append(child.rsplit('_', 1)[0])
+                            candidateList.append(child)
                         except:
                             print "Unable to open image {}!!!".format(fullPath)
                     # parent as query
@@ -48,7 +49,7 @@ def main():
                     try:
                         im = Image.open(parentFullPath)
                         Q.append(leargist.color_gist(im, orientations=(4,4,2)))
-                        queryList.append(parent.rsplit('.', 1)[0])
+                        queryList.append(parent)
                     except:
                         print "Unable to open image {}".format(fullPath)
         X = np.array(X)
