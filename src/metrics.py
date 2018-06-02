@@ -2,7 +2,7 @@
 Script to compute Mean Reciprocal Rank and Hit Rate at 10 given predictions and an index file
 
 Predictions is a 2D numpy array, each row contains predictions of a batch.
-NOTE: this is probably not rectangular as the last batch is not a full batch
+NOTE: this is probably not rectangular as the last batch is not a full batch - each element of predictions is actually 2D [10000, 1]
 Index is an array of num_queries tuples (startBatch, startBatchIdx, endBatch, endBatchIdx, [relative indices of true candidates])
 '''
 
@@ -49,10 +49,10 @@ def main():
         else:
             if startBatch == endBatch:
                 # within a batch
-                predictionsOfQuery = predictions[startBatch][startBatchIdx:endBatchIdx]
+                predictionsOfQuery = predictions[startBatch].flatten()[startBatchIdx:endBatchIdx]
             elif startBatch == endBatch - 1:
                 # across 2 batches
-                predictionsOfQuery = np.concatenate((predictions[startBatch][startBatchIdx:], predictions[endBatch][:endBatchIdx]))
+                predictionsOfQuery = np.concatenate((predictions[startBatch].flatten()[startBatchIdx:], predictions[endBatch].flatten()[:endBatchIdx]))
             else:
                 print "Impossible! Candidates more than 1 batch."
                 sys.exit()
