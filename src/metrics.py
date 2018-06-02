@@ -1,5 +1,5 @@
 '''
-Script to compute Mean Reciprocal Rank and Hit Rate at 10 given predictions and an index file
+Script to compute Mean Reciprocal Rank and Hit Rate at 5 given predictions and an index file
 
 Predictions is a 2D numpy array, each row contains predictions of a batch.
 NOTE: this is probably not rectangular as the last batch is not a full batch - each element of predictions is actually 2D [10000, 1]
@@ -19,8 +19,6 @@ def main():
             help='the prediction file relative to ../data')
     parser.add_argument('-i', dest='index', required=True,
             help='the index file relative to ../data')
-    parser.add_argument('-q', dest='queryNames', required=True,
-            help='the query names file relative to ../data')
     parser.add_argument('-m', dest='mode', required=True,
             help='the mode indicating which is candidate and which is query (pc/cp)')
     (options, args) = parser.parse_known_args()
@@ -35,8 +33,6 @@ def main():
     predictions = np.load(os.path.join(INPUT_DIR, options.predictions))
     with open(os.path.join(INPUT_DIR, options.index), 'rb') as file:
         index = pickle.load(file)
-    with open(os.path.join(INPUT_DIR, options.queryNames), 'rb') as file:
-        queryNames = pickle.load(file)
 
     # Computations
     MRR = []
@@ -65,29 +61,17 @@ def main():
                     print "Rank {}".format(rank)
                     MRR.append(1.0 / rank)
                     break
-            # Hit Rate
-            if options.mode == 'pc':
-                # only 1 possible parent
-                assert len(relIndices) == 1
-                if relIndices[0] in sortedIndices[:10]:
-                    print "Hit Rate at 10: 1"
-                    HR.append(1)
-                else:
-                    print "Hit Rate at 10: 0"
-                    HR.append(0)
-            else:
+            # Hit Rate (only makes sense in cp mode)
+            if options.mode == 'cp':
                 hits = 0
-                for idx in sortedIndices[:10]:
+                for idx in sortedIndices[:5]:
                     if idx in relIndices:
                         hits += 1
-                queryName = queryNames[i]
-                stem = queryName.rsplit('.', 1)[0]
-                numChildren = len(os.listdir(os.path.join(DATA_DIR, stem))) - 1
-                hitRate = 1.0 * hits / numChildren
-                print "Hit Rate at 10: {}".format(hitRate)
+                hitRate = 1.0 * hits / 5
+                print "Hit Rate at 5: {}".format(hitRate)
                 HR.append(hitRate)
     print "Mean Reciprocal Rank: {}".format(np.mean(MRR))
-    print "Mean Hit Rate at 10: {}".format(np.mean(HR))
+    print "Mean Hit Rate at 5: {}".format(np.mean(HR))
 
 
 if __name__ == "__main__":
