@@ -331,19 +331,7 @@ def predict(model, FLAGS):
     print "Precision: {}".format(1.0 * total_tp / (total_tp + total_fp))
     print "Recall: {}".format(1.0 * total_tp / (total_tp + total_fn))
     print "Prediction finished."
-
-    #dump the predictions into a file.
-
-    # print "predictions[:30]", predictions[:30]
-    # print "y[:30]", y[:30]
-    # predictions = siamese_model.predict_generator(test_batch_generator,
-    #                                                 steps=21,
-    #                                                 max_queue_size=1,
-    #                                                 workers=4,
-    #                                                 use_multiprocessing=True,
-    #                                                 verbose=1)
-
-
+    # caution: corner case of endBatch = 0
 
 def eval_data_file(model, file_path, FLAGS):
     print "\nEvaluating data in {}...".format(file_path)
