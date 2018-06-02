@@ -129,7 +129,7 @@ def main():
     parser.add_argument('--input', dest='input', nargs='?', default='../data',
             help='Specify path for LSH processed input data')
     parser.add_argument('--output', dest='output', required=True,
-            help='Specify filename for generated candidate batches, relative to this file')
+            help='Specify absolute filename for generated candidate batches')
     (options, args) = parser.parse_known_args()
 
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -213,7 +213,7 @@ def main():
     batchCounter = 0
     # each element in index: (startBatch, startBatchIdx, endBatch, endBatchIdx, [relative indices of true candidates])
     index = []
-    fileStem = os.path.join(PROJECT_DIR, options.output)
+    fileStem = options.output
     for i, candidates in enumerate(candidatesForQueries):
         queryName = queryNames[i]
         print "=" * 50
