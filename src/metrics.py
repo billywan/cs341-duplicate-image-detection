@@ -31,10 +31,10 @@ def main():
     PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
     INPUT_DIR = os.path.join(PROJECT_DIR, '../data')
     DATA_DIR = "/mnt/data2/photoshopbattle_images_samples"
-    predictions = np.load(os.path.join(INPUT_DIR, options.p))
-    with open(os.path.join(INPUT_DIR, options.i), 'rb') as file:
+    predictions = np.load(os.path.join(INPUT_DIR, options.predictions))
+    with open(os.path.join(INPUT_DIR, options.index), 'rb') as file:
         index = pickle.load(file)
-    with open(os.path.join(INPUT_DIR, options.q), 'rb') as file:
+    with open(os.path.join(INPUT_DIR, options.queryNames), 'rb') as file:
         queryNames = pickle.load(file)
 
     # Computations
