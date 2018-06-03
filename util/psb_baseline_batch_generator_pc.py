@@ -1,7 +1,7 @@
 '''
-Script for generating baseline data batch. Child images are used are query and parent images are used as candidates. 
+Script for generating baseline data batch. Parent images are used as query and child images are used as candidates. 
 
-Assume all parent images have been collected into a single folder.
+Assume child images of all threads have been collected into a single folder.
 
 Output:
 
@@ -11,7 +11,7 @@ Index files storing the relative indices of real candidates. Will later be used 
 
 Usage:
 
-python util/psb_baseline_batch_generator_cp.py
+python util/psb_baseline_batch_generator_pc.py
 
 '''
 import numpy as np
@@ -25,9 +25,9 @@ import sys
 # Some constants
 DISK_DIR = "/mnt/data2"
 DATA_DIR = os.path.join(DISK_DIR, "photoshopbattle_images_small_samples")
-CANDIDATE_DIR = os.path.join(DISK_DIR, "photoshopbattle_images_small_samples_parents")
+CANDIDATE_DIR = os.path.join(DISK_DIR, "photoshopbattle_images_small_samples_children")
 PROJECT_DIR = os.path.join("..", os.path.abspath(os.path.dirname(__file__)))
-OUTPUT_DIR = os.path.join(DISK_DIR, "data_batches_baseline_cp")
+OUTPUT_DIR = os.path.join(DISK_DIR, "data_batches_baseline_pc")
 INDEX_DIR = os.path.join(PROJECT_DIR, "index")
 
 BATCH_SIZE = 10000
@@ -67,7 +67,6 @@ if not os.path.exists(DATA_DIR):
 if not os.path.exists(CANDIDATE_DIR):
 	sys.exit("Directory photoshopbattle_images_small_samples_parents does not exists. Ending...")
 make_dir(OUTPUT_DIR)
-make_dir(INDEX_DIR)
 candidate_fns = sorted(os.listdir(CANDIDATE_DIR))
 candidate_arrs = [np.array(Image.open(os.path.join(CANDIDATE_DIR, candidate_fn))) for candidate_fn in candidate_fns]
 
@@ -82,9 +81,9 @@ for dir_name, subdir_list, file_list in os.walk(DATA_DIR):
 	if file_list[0].count('_') != 1:
 		# no parent image
 		continue
-	query_fns = file_list[1:]
+	query_fns = [file_list[0]]
 
-	# Generate (c, p) pair for each query
+	# Generate (p, c) pair for each query
 	for i, query_fn in enumerate(query_fns):
 		start_batch = batch_counter
 		start_batch_idx = len(X1)
@@ -96,7 +95,7 @@ for dir_name, subdir_list, file_list in os.walk(DATA_DIR):
 		for j, candidate_fn in enumerate(candidate_fns):
 			X1.append(candidate_arrs[j])
 			X2.append(query_arr)
-			if candidate_fn.rsplit('.', 1)[0] in query_fn:
+			if candidate_fn.rsplit('_', 1)[0] in query_fn:
 				# parent child with same post_id
 				print("Found query {} and candidate {} with the same post_id. idx={}".format(query_fn, candidate_fn, j))
 				y.append(SCORE_POS)
@@ -114,7 +113,7 @@ for dir_name, subdir_list, file_list in os.walk(DATA_DIR):
 # Dump final batch and index file
 print "Dumping final batch..."
 writeOutput()
-with open(os.path.join(INDEX_DIR, 'index-cp'), 'wb') as out:
+with open(os.path.join(INDEX_DIR, 'index-pc'), 'wb') as out:
 	pickle.dump(index, out)
 	out.close()
 
