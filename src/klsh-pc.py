@@ -212,16 +212,20 @@ def main():
     X2 = []
     y = []
     batchCounter = 0
+    # each element in index: (startBatch, startBatchIdx, endBatch, endBatchIdx, [relative indices of true candidates])
+    index = []
     fileStem = os.path.join(PROJECT_DIR, options.output)
     for i, candidateList in enumerate(candidates):
-        numCandidate = len(candidateList)
         queryName = queries[i]
         print "=" * 50
         print "Query {}: {}".format(i, queryName)
-        if numCandidate > 0:
+        if len(candidateList) > 0:
+            startBatch = batchCounter
+            startBatchIdx = len(X1)
+            relIndices = []
             queryDir = os.path.join(DATA_DIR, queryName.rsplit('_', 1)[0])
             query = np.array(Image.open(os.path.join(queryDir, queryName)))
-            for candidateIdx in candidateList:
+            for j, candidateIdx in enumerate(candidateList):
                 # get candidate submission dir name
                 candidateStem = submissionList[candidateIdx]
                 candidateDir = os.path.join(DATA_DIR, candidateStem)
@@ -232,19 +236,26 @@ def main():
                 if candidateStem in queryName:
                     print "Original found in candidates for query {}: {}".format(i, queryName)
                     y.append(1.0)
+                    relIndices.append(j)
                 else:
                     y.append(0.0)
                 if len(X1) == BATCH_SIZE:
                     print "Dumping batch {}...".format(batchCounter)
-                    with open(fileStem + "_" + str(batchCounter), 'wb') as file:
+                    with open(fileStem + "_" + str(batchCounter).zfill(2), 'wb') as file:
                         pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, file)
                     del X1[:]
                     del X2[:]
                     del y[:]
                     batchCounter += 1
+            # sanity check: only 1 parent
+            assert len(relIndices) <= 1
+            print "Appending index: ({}, {}, {}, {}, {})".format(startBatch, startBatchIdx, batchCounter, len(X1), relIndices)
+            index.append((startBatch, startBatchIdx, batchCounter, len(X1), relIndices))
     print "Dumping final batch..."
-    pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, open(fileStem + "_" + str(batchCounter), 'wb'))
-
+    with open(fileStem + "_" + str(batchCounter).zfill(2), 'wb') as file:
+        pickle.dump({'X1': np.array(X1), 'X2': np.array(X2), 'y': np.array(y)}, file)
+    with open(os.path.join(INPUT_DIR, 'index-pc'), 'wb') as file:
+        pickle.dump(index, file)
 
 if __name__ == "__main__":
     main()
