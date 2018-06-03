@@ -1,3 +1,19 @@
+'''
+Script for generating baseline data batch. Child images are used are query and parent images are used as candidates. 
+
+Assume all parent images have been collected into a single folder.
+
+Output:
+
+Data batches (X1, X2, y) with batch_size = 10000
+
+Index files storing the relative indices of real candidates. Will later be used in metrics.py
+
+Usage:
+
+python util/psb_baseline_batch_generator_cp.py
+
+'''
 import numpy as np
 import os
 from PIL import Image
