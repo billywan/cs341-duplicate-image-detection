@@ -38,9 +38,13 @@ def main():
     MRR = []
     AMRR = []
     HR = []
+    # counters for plotting
+    miss = 0
+    rankCounts = np.array([0, 0, 0])
     for i, tuple in enumerate(index):
         startBatch, startBatchIdx, endBatch, endBatchIdx, relIndices = tuple
         if len(relIndices) == 0:
+            miss += 1
             MRR.append(0)
             AMRR.append(0)
             HR.append(0)
@@ -62,6 +66,8 @@ def main():
                     rank = i + 1
                     print "Rank {}".format(rank)
                     MRR.append(1.0 / rank)
+                    if i < 3:
+                        rankCounts[i] += 1
                     break
             # Precision at 3
             if options.mode == 'cp':
@@ -82,6 +88,7 @@ def main():
     print "Mean Reciprocal Rank: {}".format(np.mean(MRR))
     print "MRR all children: {}".format(np.mean(AMRR))
     print "Mean Precision at 3: {}".format(np.mean(HR))
+    print "Rank Counts Percent: {}, {}".format(100.0 * rankCounts / len(index), 100.0 * miss / len(index))
 
 
 if __name__ == "__main__":
