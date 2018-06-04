@@ -88,7 +88,7 @@ def main():
     print "Mean Reciprocal Rank: {}".format(np.mean(MRR))
     print "MRR all children: {}".format(np.mean(AMRR))
     print "Mean Precision at 3: {}".format(np.mean(HR))
-    print "Rank Counts Percent: {}, {}".format(100.0 * rankCounts / len(index), 100.0 * miss / len(index))
+    print "Rank Counts Percent: {}".format(100.0 * rankCounts / (len(index)-miss))
 
 
 if __name__ == "__main__":
