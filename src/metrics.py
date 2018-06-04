@@ -1,5 +1,5 @@
 '''
-Script to compute Mean Reciprocal Rank and Precision at 3 given predictions and an index file
+Script to compute Mean Reciprocal Rank, NMRR and Precision at 3 given predictions and an index file
 
 Predictions is a 2D numpy array, each row contains predictions of a batch.
 NOTE: this is probably not rectangular as the last batch is not a full batch - each element of predictions is actually 2D [10000, 1]
@@ -14,7 +14,7 @@ import numpy as np
 import pickle
 
 def main():
-    parser = argparse.ArgumentParser(description='Compute Mean Reciprocal Rank and Precision at 3')
+    parser = argparse.ArgumentParser(description='Compute Mean Reciprocal Rank, Normalized MRR, and Precision at 3')
     parser.add_argument('-p', dest='predictions', required=True,
             help='the prediction file relative to ../data')
     parser.add_argument('-i', dest='index', required=True,
@@ -36,6 +36,7 @@ def main():
 
     # Computations
     MRR = []
+    NMRR = []
     HR = []
     for i, tuple in enumerate(index):
         startBatch, startBatchIdx, endBatch, endBatchIdx, relIndices = tuple
@@ -63,6 +64,13 @@ def main():
                     break
             # Precision at 3
             if options.mode == 'cp':
+                # NMRR
+                MRRs = []
+                for i, idx in enumerate(sortedIndices):
+                    if idx in relIndices:
+                        rank = i + 1
+                        MRRs.append(1.0 / rank)
+                NMRR.append(np.mean(MRRs) / np.log(len(relIndices)))
                 hits = 0
                 for idx in sortedIndices[:3]:
                     if idx in relIndices:
@@ -71,6 +79,7 @@ def main():
                 print "Precision at 3: {}".format(precision)
                 HR.append(precision)
     print "Mean Reciprocal Rank: {}".format(np.mean(MRR))
+    print "Normalized Average MRR: {}".format(np.mean(NMRR))
     print "Mean Precision at 3: {}".format(np.mean(HR))
 
 
