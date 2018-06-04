@@ -61,7 +61,7 @@ def main():
                 if idx in relIndices:
                     rank = i + 1
                     print "Rank {}".format(rank)
-                    AMRR.append(1.0 / rank)
+                    MRR.append(1.0 / rank)
                     break
             # Precision at 3
             if options.mode == 'cp':
