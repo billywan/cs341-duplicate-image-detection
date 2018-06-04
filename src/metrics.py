@@ -40,7 +40,7 @@ def main():
     HR = []
     # counters for plotting
     miss = 0
-    rankCounts = np.array([0, 0, 0])
+    rankCounts = np.array([0, 0, 0, 0])
     for i, tuple in enumerate(index):
         startBatch, startBatchIdx, endBatch, endBatchIdx, relIndices = tuple
         if len(relIndices) == 0:
@@ -66,7 +66,7 @@ def main():
                     rank = i + 1
                     print "Rank {}".format(rank)
                     MRR.append(1.0 / rank)
-                    if i < 3:
+                    if i < 4:
                         rankCounts[i] += 1
                     break
             # Precision at 3
