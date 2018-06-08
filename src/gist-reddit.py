@@ -1,6 +1,5 @@
 '''
-Script to compute gist vectors for input images and save to disk
-Here, input/candidate is parent, queries are children.
+Script to compute gist vectors for reddit candidate and query images and save to disk
 '''
 
 import os
