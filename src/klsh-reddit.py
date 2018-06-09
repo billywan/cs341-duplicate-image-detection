@@ -147,6 +147,8 @@ def main():
         KMean = np.load(os.path.join(PARAM_DIR, 'KMean-reddit.npy'))
         klsh = KLSH(W=W, sample=sample, KMean0=KMean0, KMean=KMean)
         H = np.load(os.path.join(PARAM_DIR, 'H-reddit.npy'))
+        with open(os.path.join(INPUT_DIR, 'submissions-reddit'), 'rb') as file:
+            submissionList = pickle.load(file)
 
     else:
         os.mkdir(PARAM_DIR)
@@ -201,44 +203,44 @@ def main():
     print "Average number of candidates {}".format(np.mean(numCandidates))
 
     # generate batches for Siamese evaluation
-    # print "Generating batches..."
-    # X1 = []
-    # X2 = []
-    # batchCounter = 0
-    # # each element in index: (startBatch, startBatchIdx, endBatch, endBatchIdx, [relative indices of true candidates])
-    # index = []
-    # fileStem = os.path.join(PROJECT_DIR, options.output)
-    # for i, candidateList in enumerate(candidates):
-    #     queryName = queries[i]
-    #     print "=" * 50
-    #     print "Query {}: {}".format(i, queryName)
-    #     if len(candidateList) > 0:
-    #         startBatch = batchCounter
-    #         startBatchIdx = len(X1)
-    #         relIndices = []
-    #         query = np.array(Image.open(os.path.join(QUERY_DIR, queryName)))
-    #         for j, candidateIdx in enumerate(candidateList):
-    #             # get candidate submission dir name
-    #             candidate = submissionList[candidateIdx]
-    #             print "Candidate: {}".format(candidate)
-    #             X1.append(np.array(Image.open(os.path.join(CANDIDATE_DIR, candidate))))
-    #             X2.append(query)
-    #             if len(X1) == BATCH_SIZE:
-    #                 print "Dumping batch {}...".format(batchCounter)
-    #                 with open(fileStem + "_" + str(batchCounter).zfill(2), 'wb') as file:
-    #                     pickle.dump({'X1': np.array(X1), 'X2': np.array(X2)}, file)
-    #                 del X1[:]
-    #                 del X2[:]
-    #                 batchCounter += 1
-    #         # sanity check: only 1 parent
-    #         assert len(relIndices) <= 1
-    #         print "Appending index: ({}, {}, {}, {}, {})".format(startBatch, startBatchIdx, batchCounter, len(X1), relIndices)
-    #         index.append((startBatch, startBatchIdx, batchCounter, len(X1), relIndices))
-    # print "Dumping final batch..."
-    # with open(fileStem + "_" + str(batchCounter).zfill(2), 'wb') as file:
-    #     pickle.dump({'X1': np.array(X1), 'X2': np.array(X2)}, file)
-    # with open(os.path.join(INPUT_DIR, 'index-reddit'), 'wb') as file:
-    #     pickle.dump(index, file)
+    print "Generating batches..."
+    X1 = []
+    X2 = []
+    batchCounter = 0
+    # each element in index: (startBatch, startBatchIdx, endBatch, endBatchIdx, [relative indices of true candidates])
+    index = []
+    fileStem = os.path.join(PROJECT_DIR, options.output)
+    for i, candidateList in enumerate(candidates):
+        queryName = queries[i]
+        print "=" * 50
+        print "Query {}: {}".format(i, queryName)
+        if len(candidateList) > 0:
+            startBatch = batchCounter
+            startBatchIdx = len(X1)
+            relIndices = []
+            query = np.array(Image.open(os.path.join(QUERY_DIR, queryName)))
+            for j, candidateIdx in enumerate(candidateList):
+                # get candidate submission dir name
+                candidate = submissionList[candidateIdx]
+                print "Candidate: {}".format(candidate)
+                X1.append(np.array(Image.open(os.path.join(CANDIDATE_DIR, candidate))))
+                X2.append(query)
+                if len(X1) == BATCH_SIZE:
+                    print "Dumping batch {}...".format(batchCounter)
+                    with open(fileStem + "_" + str(batchCounter).zfill(2), 'wb') as file:
+                        pickle.dump({'X1': np.array(X1), 'X2': np.array(X2)}, file)
+                    del X1[:]
+                    del X2[:]
+                    batchCounter += 1
+            # sanity check: only 1 parent
+            assert len(relIndices) <= 1
+            print "Appending index: ({}, {}, {}, {}, {})".format(startBatch, startBatchIdx, batchCounter, len(X1), relIndices)
+            index.append((startBatch, startBatchIdx, batchCounter, len(X1), relIndices))
+    print "Dumping final batch..."
+    with open(fileStem + "_" + str(batchCounter).zfill(2), 'wb') as file:
+        pickle.dump({'X1': np.array(X1), 'X2': np.array(X2)}, file)
+    with open(os.path.join(INPUT_DIR, 'index-reddit'), 'wb') as file:
+        pickle.dump(index, file)
 
 if __name__ == "__main__":
     main()
