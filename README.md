@@ -6,6 +6,7 @@ We designed a 2-stage pipeline consisting of Kernelized Locality Sensitive Hashi
 We will use the experiment on the Reddit Photoshop Battle dataset of parent as candidate and children as query (original image retrieval) as the running example here.
 
 1. KLSH
+
 KLSH works on Gist descriptor representations of images. To compute gist vectors for candidate and query images, modify paths in the script and run
 ```
 python src/gist-pc.py
@@ -17,6 +18,7 @@ python src/klsh-pc.py
 which runs KLSH and stores candidate-query pairs in batches ready for the Siamese Network.
 
 2. Siamese Network
+
 We trained 2 Siamese Networks, one based on VGG16 and another based on ResNet50.
 To compute predictions on candidate-query batches, run
 ```
