@@ -5,6 +5,12 @@ We designed a 2-stage pipeline consisting of Kernelized Locality Sensitive Hashi
 
 We will use the experiment on the Reddit Photoshop Battle dataset of parent as candidate and children as query (original image retrieval) as the running example here.
 
+Before running the model, run command
+```
+pip install -r requirements.txt
+```
+to install all the required libraries.
+
 1. KLSH
 
 KLSH works on Gist descriptor representations of images. To compute gist vectors for candidate and query images, modify paths in the script and run
