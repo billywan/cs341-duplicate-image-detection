@@ -26,9 +26,9 @@ import sys
 DISK_DIR = "/mnt/data2"
 DATA_DIR = os.path.join(DISK_DIR, "photoshopbattle_images_small_samples")
 CANDIDATE_DIR = os.path.join(DISK_DIR, "photoshopbattle_images_small_samples_parents")
-PROJECT_DIR = os.path.join("..", os.path.abspath(os.path.dirname(__file__)))
+PROJECT_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 OUTPUT_DIR = os.path.join(DISK_DIR, "data_batches_baseline_cp")
-INDEX_DIR = os.path.join(PROJECT_DIR, "index")
+INDEX_DIR = os.path.join(PROJECT_DIR, "data/index")
 
 BATCH_SIZE = 10000
 SCORE_POS = 1.0

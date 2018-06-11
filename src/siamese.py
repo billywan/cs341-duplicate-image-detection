@@ -290,49 +290,25 @@ def train(model, FLAGS):
 
 def predict_data_file(model, file_path, FLAGS):
     print "Predicting data in {} ...".format(file_path)
-    data = psb_util.load_data_file(file_path, expect_label=True)
+    data = psb_util.load_data_file(file_path, expect_label=False)
     [X1, X2], y = data
     # At prediction time, no labels are available. We use labels to calculate our own metrics
     predictions = model.predict([X1, X2], batch_size = FLAGS.batch_size, verbose=1)
     print "Done predicting over {} example pairs.".format(len(predictions))
-    numInBatch = len(y)
-    assert len(predictions) == numInBatch
-    tn, fp, fn, tp = confusion_matrix(y, np.around(predictions)).ravel()
-    print "TN: {}, FP: {}, FN: {}, TP: {}, TOTAL: {}".format(tn, fp, fn, tp, numInBatch)
-    return tn, fp, fn, tp, numInBatch, predictions
+    return predictions
 
 def predict(model, FLAGS):
     model = compile_model(model, FLAGS)
-    #eval_batch_generator = psb_util.batch_generator(data_dir=FLAGS.eval_data_dir, batch_size=FLAGS.batch_size)
-    #[X1, X2], y = next(eval_batch_generator)
-
-    total_tn = 0
-    total_fp = 0
-    total_fn = 0
-    total_tp = 0
-    numExamples = 0
     predictions = []
     if os.path.isdir(FLAGS.eval_data_path):
         data_files = [os.path.join(FLAGS.eval_data_path, file) for file in sorted(os.listdir(FLAGS.eval_data_path))]
         for file in data_files:
-            tn, fp, fn, tp, batchExamples, batchPredictions = predict_data_file(model, file, FLAGS)
-            total_tn += tn
-            total_fp += fp
-            total_fn += fn
-            total_tp += tp
-            numExamples += batchExamples
+            batchPredictions = predict_data_file(model, file, FLAGS)
             predictions.append(batchPredictions)
     else:
-        total_tn, total_fp, total_fn, total_tp, numExamples, predictions = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
+        predictions = predict_data_file(model, FLAGS.eval_data_path, FLAGS)
 
-    print "Total Examples: {}".format(numExamples)
-    print "True Negatives: {}".format(1.0 * total_tn / numExamples)
-    print "False Positives: {}".format(1.0 * total_fp / numExamples)
-    print "False Negatives: {}".format(1.0 * total_fn / numExamples)
-    print "True Positives: {}".format(1.0 * total_tp / numExamples)
-    print "Precision: {}".format(1.0 * total_tp / (total_tp + total_fp))
-    print "Recall: {}".format(1.0 * total_tp / (total_tp + total_fn))
-    predictionPath = "/home/Billy/cs341-duplicate-image-detection/data/predictions.npy"
+    predictionPath = "/home/zhangyun/cs341-duplicate-image-detection/data/predictions_reddit.npy"
     print "Saving predictions {}...".format(predictionPath)
     np.save(predictionPath, np.array(predictions))
     print "Prediction finished."
